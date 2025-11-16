@@ -17,20 +17,7 @@
       <h5 class="mb-0">Search criteria</h5>
     </div>
     <div class="card-body">
-      <form method="get" action="{{ as_url(admin.ldap_get) }}">
-        {{ form.csrf_token }}
-        <div class="mb-3">
-          {{ form.uid.label(class="form-label") }}
-          {{ form.uid(class="form-control") }}
-          {% if form.uid.errors %}<div class="invalid-feedback d-block">{{ form.uid.errors|join(", ") }}</div>{% endif %}
-        </div>
-        <div class="mb-3">
-          {{ form.email.label(class="form-label") }}
-          {{ form.email(class="form-control") }}
-          {% if form.email.errors %}<div class="invalid-feedback d-block">{{ form.email.errors|join(", ") }}</div>{% endif %}
-        </div>
-        {{ form.submit(class="btn btn-primary") }}
-      </form>
+      {{ form }}
     </div>
   </div>
 

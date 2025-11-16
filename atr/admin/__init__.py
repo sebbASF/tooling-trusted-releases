@@ -41,7 +41,6 @@ import atr.datasources.apache as apache
 import atr.db as db
 import atr.db.interaction as interaction
 import atr.form as form
-import atr.forms as forms
 import atr.get as get
 import atr.htm as htm
 import atr.ldap as ldap
@@ -96,10 +95,9 @@ class DeleteReleaseForm(form.Form):
         return v
 
 
-class LdapLookupForm(forms.Typed):
-    uid = forms.optional("ASF UID (optional)", placeholder="Enter ASF UID, e.g. johnsmith, or * for all")
-    email = forms.optional("Email address (optional)", placeholder="Enter email address, e.g. user@example.org")
-    submit = forms.submit("Lookup")
+class LdapLookupForm(form.Form):
+    uid: str = form.label("ASF UID (optional)", "Enter ASF UID, e.g. johnsmith, or * for all")
+    email: str = form.label("Email address (optional)", "Enter email address, e.g. user@example.org")
 
 
 @admin.get("/all-releases")
@@ -547,39 +545,31 @@ async def keys_update_post(session: web.Committer) -> str | web.WerkzeugResponse
         }, 200
 
 
-@admin.get("/ldap/")
+@admin.get("/ldap")
 async def ldap_get(session: web.Committer) -> str:
-    return await _ldap(session)
+    rendered_form = form.render(
+        model_cls=LdapLookupForm,
+        submit_label="Lookup",
+    )
+    return await template.render(
+        "ldap-lookup.html",
+        form=rendered_form,
+        ldap_params=None,
+        asf_id=session.asf_uid,
+        ldap_query_performed=False,
+        uid_query=None,
+    )
 
 
-@admin.post("/ldap/")
-async def ldap_post(session: web.Committer) -> str:
-    return await _ldap(session)
-
-
-def _format_exception_location(exc: BaseException) -> str:
-    tb = exc.__traceback__
-    last_tb = None
-    while tb is not None:
-        last_tb = tb
-        tb = tb.tb_next
-    if last_tb is None:
-        return f"{type(exc).__name__}: {exc}"
-    frame = last_tb.tb_frame
-    filename = pathlib.Path(frame.f_code.co_filename).name
-    lineno = last_tb.tb_lineno
-    func = frame.f_code.co_name
-    return f"{type(exc).__name__} at {filename}:{lineno} in {func}: {exc}"
-
-
-async def _ldap(session: web.Committer) -> str:
-    form = await LdapLookupForm.create_form(data=quart.request.args)
-
-    uid_query = form.uid.data
-    email_query = form.email.data
+@admin.post("/ldap")
+@admin.form(LdapLookupForm)
+async def ldap_post(session: web.Committer, lookup_form: LdapLookupForm) -> str:
+    # TODO: This is one case where we should perhaps allow str | None on the form
+    uid_query = lookup_form.uid if lookup_form.uid else None
+    email_query = lookup_form.email if lookup_form.email else None
 
     ldap_params: ldap.SearchParameters | None = None
-    if (quart.request.method == "GET") and (uid_query or email_query):
+    if uid_query or email_query:
         bind_dn = quart.current_app.config.get("LDAP_BIND_DN")
         bind_password = quart.current_app.config.get("LDAP_BIND_PASSWORD")
 
@@ -595,9 +585,15 @@ async def _ldap(session: web.Committer) -> str:
         end = time.perf_counter_ns()
         log.info("LDAP search took %d ms", (end - start) / 1000000)
 
+    rendered_form = form.render(
+        model_cls=LdapLookupForm,
+        submit_label="Lookup",
+        defaults={"uid": uid_query, "email": email_query},
+    )
+
     return await template.render(
         "ldap-lookup.html",
-        form=form,
+        form=rendered_form,
         ldap_params=ldap_params,
         asf_id=session.asf_uid,
         ldap_query_performed=ldap_params is not None,
@@ -895,6 +891,21 @@ async def _delete_releases(session: web.Committer, releases_to_delete: list[str]
     if fail_count > 0:
         errors_str = "\n".join(error_messages)
         await quart.flash(f"Failed to delete {fail_count} {releases}:\n{errors_str}", "error")
+
+
+def _format_exception_location(exc: BaseException) -> str:
+    tb = exc.__traceback__
+    last_tb = None
+    while tb is not None:
+        last_tb = tb
+        tb = tb.tb_next
+    if last_tb is None:
+        return f"{type(exc).__name__}: {exc}"
+    frame = last_tb.tb_frame
+    filename = pathlib.Path(frame.f_code.co_filename).name
+    lineno = last_tb.tb_lineno
+    func = frame.f_code.co_name
+    return f"{type(exc).__name__} at {filename}:{lineno} in {func}: {exc}"
 
 
 async def _get_filesystem_dirs() -> list[str]:
