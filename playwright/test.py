@@ -1347,9 +1347,7 @@ def test_tidy_up_ssh_keys_continued(page: sync_api.Page, fingerprints_to_delete:
         logging.info(f"Locating delete form for fingerprint: {fingerprint}")
         # Locate again by fingerprint for robustness in case of changes
         card_to_delete_locator = page.locator(f"div.card:has(td:has-text('{fingerprint}'))")
-        delete_button_locator = card_to_delete_locator.locator(
-            'form[action="/keys"] input[type="submit"][value="Delete key"]'
-        )
+        delete_button_locator = card_to_delete_locator.get_by_role("button", name="Delete key")
 
         if delete_button_locator.is_visible():
             logging.info(f"Delete button found for {fingerprint}, proceeding with deletion")
