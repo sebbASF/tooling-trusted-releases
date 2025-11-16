@@ -86,7 +86,7 @@ async def delete(session: web.Committer) -> web.WerkzeugResponse:
         # TODO: Confirm that this is a bug, and report upstream
         # Changing it to str(...) doesn't work either
         # Yet it works in preview.py
-        await aioshutil.rmtree(draft_dir)  # type: ignore[call-arg]
+        await aioshutil.rmtree(draft_dir)
 
     return await session.redirect(get.root.index, success="Candidate draft deleted successfully")
 

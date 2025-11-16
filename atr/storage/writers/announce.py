@@ -179,7 +179,7 @@ class CommitteeMember(CommitteeParticipant):
             )
             if unfinished_revisions_path:
                 # This removes all of the prior revisions
-                await aioshutil.rmtree(str(unfinished_revisions_path))  # type: ignore[call-arg]
+                await aioshutil.rmtree(str(unfinished_revisions_path))
         except Exception as e:
             raise storage.AccessError(f"Error moving files: {e!s}")
 

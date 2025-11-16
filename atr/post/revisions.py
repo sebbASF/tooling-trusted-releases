@@ -61,7 +61,7 @@ async def selected_post(
             project_name, version_name, session.uid, description=description
         ) as creating:
             # TODO: Stop create_and_manage from hard linking the parent first
-            await aioshutil.rmtree(creating.interim_path)  # type: ignore[call-arg]
+            await aioshutil.rmtree(creating.interim_path)
             await util.create_hard_link_clone(selected_revision_dir, creating.interim_path)
 
         if creating.new is None:

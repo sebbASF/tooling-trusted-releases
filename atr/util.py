@@ -168,7 +168,7 @@ async def async_temporary_directory(
         yield pathlib.Path(temp_dir_path)
     finally:
         try:
-            await aioshutil.rmtree(temp_dir_path)  # type: ignore[call-arg]
+            await aioshutil.rmtree(temp_dir_path)
         except Exception:
             pass
 

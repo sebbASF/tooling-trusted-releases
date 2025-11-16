@@ -29,7 +29,7 @@ ArchiveT = TypeVar("ArchiveT", tarfile.TarFile, zipfile.ZipFile)
 MemberT = TypeVar("MemberT", tarfile.TarInfo, zipfile.ZipInfo, covariant=True)
 
 
-class AbstractArchiveMember[MemberT: (tarfile.TarInfo, zipfile.ZipInfo)](TypingProtocol):  # type: ignore[misc]
+class AbstractArchiveMember[MemberT: (tarfile.TarInfo, zipfile.ZipInfo)](TypingProtocol):
     name: str
     size: int
     linkname: str | None

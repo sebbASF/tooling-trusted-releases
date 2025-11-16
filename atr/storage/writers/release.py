@@ -498,9 +498,7 @@ class CommitteeParticipant(FoundationCommitter):
         try:
             if await aiofiles.os.path.isdir(release_dir):
                 log.info("Deleting filesystem directory: %s", release_dir)
-                # Believe this to be another bug in mypy Protocol handling
-                # TODO: Confirm that this is a bug, and report upstream
-                await aioshutil.rmtree(release_dir)  # type: ignore[call-arg]
+                await aioshutil.rmtree(release_dir)
                 log.info("Successfully deleted directory: %s", release_dir)
             else:
                 log.warning("Filesystem directory not found, skipping deletion: %s", release_dir)

@@ -119,12 +119,12 @@ async def check(
             ongoing_tasks_count = await interaction.tasks_ongoing(
                 release.project.name,
                 release.version,
-                revision_number,  # type: ignore[arg-type]
+                revision_number,
             )
         case None:
-            revision_number = None  # type: ignore[assignment]
-            revision_editor = None  # type: ignore[assignment]
-            revision_timestamp = None  # type: ignore[assignment]
+            revision_number = None
+            revision_editor = None
+            revision_timestamp = None
 
     delete_draft_form = await draft.DeleteForm.create_form(
         data={"release_name": release.name, "project_name": release.project.name, "version_name": release.version}

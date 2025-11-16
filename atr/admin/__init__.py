@@ -744,7 +744,7 @@ async def task_times(
     async with db.session() as data:
         tasks = await data.task(
             project_name=project_name, version_name=version_name, revision_number=revision_number
-        ).all()  # type: ignore[reportOptionalMemberAccess]
+        ).all()
         for task in tasks:
             if (task.started is None) or (task.completed is None):
                 continue

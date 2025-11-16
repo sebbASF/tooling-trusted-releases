@@ -242,7 +242,7 @@ class UTCDateTime(sqlalchemy.types.TypeDecorator):
 
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):  # type: ignore
+    def process_bind_param(self, value, dialect):
         if value:
             if not isinstance(value, datetime.datetime):
                 raise ValueError(f"Unexpected value type {type(value)}")
@@ -255,7 +255,7 @@ class UTCDateTime(sqlalchemy.types.TypeDecorator):
         else:
             return value
 
-    def process_result_value(self, value, dialect):  # type: ignore
+    def process_result_value(self, value, dialect):
         if isinstance(value, datetime.datetime):
             return value.replace(tzinfo=datetime.UTC)
         else:
@@ -791,7 +791,7 @@ class Release(sqlmodel.SQLModel, table=True):
         return number
 
     # TODO: How do we give an example for this?
-    @pydantic.computed_field  # type: ignore[prop-decorator]
+    @pydantic.computed_field
     @property
     def latest_revision_number(self) -> str | None:
         """Get the latest revision number for the release."""

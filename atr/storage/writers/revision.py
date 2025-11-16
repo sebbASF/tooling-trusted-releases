@@ -51,7 +51,7 @@ class SafeSession:
         try:
             return await self._stack.enter_async_context(self._manager)
         except Exception:
-            await aioshutil.rmtree(self._temp_dir)  # type: ignore[call-arg]
+            await aioshutil.rmtree(self._temp_dir)
             raise
 
     async def __aexit__(self, _exc_type, _exc, _tb):
@@ -135,18 +135,18 @@ class CommitteeParticipant(FoundationCommitter):
             # The directory is either empty or its files are hard linked to the previous revision
             yield creating
         except types.FailedError as e:
-            await aioshutil.rmtree(temp_dir)  # type: ignore[call-arg]
+            await aioshutil.rmtree(temp_dir)
             creating.failed = e
             return
         except Exception:
-            await aioshutil.rmtree(temp_dir)  # type: ignore[call-arg]
+            await aioshutil.rmtree(temp_dir)
             raise
 
         # Ensure that the permissions of every directory are 755
         try:
             await asyncio.to_thread(util.chmod_directories, temp_dir_path)
         except Exception:
-            await aioshutil.rmtree(temp_dir)  # type: ignore[call-arg]
+            await aioshutil.rmtree(temp_dir)
             raise
 
         async with SafeSession(temp_dir) as data:
@@ -186,7 +186,7 @@ class CommitteeParticipant(FoundationCommitter):
                 # Rename the temporary interim directory to the new revision number
                 await aiofiles.os.rename(temp_dir, new_revision_dir)
             except Exception:
-                await aioshutil.rmtree(temp_dir)  # type: ignore[call-arg]
+                await aioshutil.rmtree(temp_dir)
                 raise
 
             # Commit to end the transaction started by data.begin_immediate
