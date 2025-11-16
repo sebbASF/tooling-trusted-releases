@@ -191,7 +191,8 @@ def main() -> None:
         print("Documentation link validation errors:\n", file=sys.stderr)
         for error in errors:
             print(error, file=sys.stderr)
-        print(f"\nFound {len(errors)} error(s)", file=sys.stderr)
+        suffix = "s" if (len(errors) > 1) else ""
+        print(f"\nFound {len(errors)} error{suffix}", file=sys.stderr)
         sys.exit(1)
 
     print(f"Validated {len(all_links)} links across {len(list(docs_dir.glob('*.md')))} files")

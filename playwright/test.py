@@ -226,7 +226,7 @@ def lifecycle_05_resolve_vote(page: sync_api.Page, credentials: Credentials, ver
     tabulate_form_locator = page.locator(f'form[action="/resolve/{TEST_PROJECT}/{version_name}"]')
     sync_api.expect(tabulate_form_locator).to_be_visible()
 
-    tabulate_button_locator = tabulate_form_locator.locator('button[type="submit"]:has-text("Resolve vote")')
+    tabulate_button_locator = tabulate_form_locator.get_by_role("button", name="Resolve vote")
     sync_api.expect(tabulate_button_locator).to_be_enabled()
     logging.info("Clicking 'Tabulate votes' button")
     tabulate_button_locator.click()
@@ -406,7 +406,7 @@ def release_remove(page: sync_api.Page, release_name: str) -> None:
         page.locator("#confirm_delete").fill("DELETE")
 
         logging.info(f"Submitting deletion form for {release_name}")
-        submit_button_locator = page.locator('input[type="submit"][value="Delete selected releases permanently"]')
+        submit_button_locator = page.get_by_role("button", name="Delete selected releases permanently")
         sync_api.expect(submit_button_locator).to_be_enabled()
         submit_button_locator.click()
 
@@ -417,7 +417,7 @@ def release_remove(page: sync_api.Page, release_name: str) -> None:
         logging.info(f"Checking for success flash message for {release_name}")
         flash_message_locator = page.locator("div.flash-success")
         sync_api.expect(flash_message_locator).to_be_visible()
-        sync_api.expect(flash_message_locator).to_contain_text("Successfully deleted 1 release(s)")
+        sync_api.expect(flash_message_locator).to_contain_text("Successfully deleted 1 release")
         logging.info(f"Deletion successful for {release_name}")
     else:
         logging.info(f"Could not find the {release_name} release, no deletion needed")
@@ -882,7 +882,7 @@ def test_login(page: sync_api.Page, credentials: Credentials) -> None:
     page.locator('input[name="password"]').fill(credentials.password)
 
     logging.info("Submitting the login form")
-    submit_button_locator = page.locator('input[type="submit"][value="Authenticate"]')
+    submit_button_locator = page.get_by_role("button", name="Authenticate")
     sync_api.expect(submit_button_locator).to_be_enabled()
     submit_button_locator.click()
 
@@ -977,7 +977,7 @@ def test_projects_03_add_project(page: sync_api.Page, credentials: Credentials) 
     page.locator('input[name="label"]').fill(project_label)
 
     logging.info("Submitting the add derived project form")
-    submit_button_locator = page.locator('input[type="submit"][value="Add project"]')
+    submit_button_locator = page.get_by_role("button", name="Add project")
     sync_api.expect(submit_button_locator).to_be_enabled()
     submit_button_locator.click()
 
@@ -1145,7 +1145,7 @@ def test_tidy_up_openpgp_keys(page: sync_api.Page) -> None:
 
     # Navigate to the delete route and submit the form
     go_to_path(page, "/admin/delete-test-openpgp-keys")
-    delete_button = page.locator('button[type="submit"]')
+    delete_button = page.get_by_role("button", name="Delete all OpenPGP keys for test user")
     if delete_button.is_visible():
         delete_button.click()
         page.wait_for_load_state()
@@ -1200,9 +1200,7 @@ def test_tidy_up_openpgp_keys_continued(page: sync_api.Page, fingerprints_to_del
         logging.info(f"Locating delete form for fingerprint: {fingerprint}")
         # Locate again by fingerprint for robustness
         row_to_delete_locator = page.locator(f'tr:has(a[href="/keys/details/{fingerprint}"])')
-        delete_button_locator = row_to_delete_locator.locator(
-            'form[action="/keys"] input[type="submit"][value="Delete key"]'
-        )
+        delete_button_locator = row_to_delete_locator.get_by_role("button", name="Delete key")
 
         if delete_button_locator.is_visible():
             logging.info(f"Delete button found for {fingerprint}, proceeding with deletion")

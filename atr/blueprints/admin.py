@@ -48,14 +48,14 @@ async def _check_admin_access() -> None:
 def empty() -> Callable[[Callable[..., Awaitable[Any]]], Callable[..., Awaitable[Any]]]:
     def decorator(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
         async def wrapper(session: web.Committer, *args: Any, **kwargs: Any) -> Any:
-            form_data = await quart.request.form
+            form_data = await atr.form.quart_request()
             try:
                 context = {
                     "args": args,
                     "kwargs": kwargs,
                     "session": session,
                 }
-                atr.form.validate(atr.form.Empty, dict(form_data), context=context)
+                atr.form.validate(atr.form.Empty, form_data, context=context)
                 return await func(session, *args, **kwargs)
             except pydantic.ValidationError:
                 msg = "Sorry, there was an empty form validation error. Please try again."
@@ -76,20 +76,20 @@ def form(
 ) -> Callable[[Callable[..., Awaitable[Any]]], Callable[..., Awaitable[Any]]]:
     def decorator(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
         async def wrapper(session: web.Committer, *args: Any, **kwargs: Any) -> Any:
-            form_data = await quart.request.form
+            form_data = await atr.form.quart_request()
             try:
                 context = {
                     "args": args,
                     "kwargs": kwargs,
                     "session": session,
                 }
-                validated_form = atr.form.validate(form_cls, dict(form_data), context=context)
+                validated_form = atr.form.validate(form_cls, form_data, context=context)
                 return await func(session, validated_form, *args, **kwargs)
             except pydantic.ValidationError as e:
                 errors = e.errors()
                 if len(errors) == 0:
                     raise RuntimeError("Validation failed, but no errors were reported")
-                flash_data = atr.form.flash_error_data(form_cls, errors, dict(form_data))
+                flash_data = atr.form.flash_error_data(form_cls, errors, form_data)
                 summary = atr.form.flash_error_summary(errors, flash_data)
 
                 await quart.flash(summary, category="error")

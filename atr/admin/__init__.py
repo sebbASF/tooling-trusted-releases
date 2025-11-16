@@ -30,6 +30,8 @@ import aiohttp
 import asfquart
 import asfquart.base as base
 import asfquart.session
+import htpy
+import pydantic
 import quart
 import sqlalchemy.orm as orm
 
@@ -41,6 +43,7 @@ import atr.db.interaction as interaction
 import atr.form as form
 import atr.forms as forms
 import atr.get as get
+import atr.htm as htm
 import atr.ldap as ldap
 import atr.log as log
 import atr.mapping as mapping
@@ -62,26 +65,35 @@ class BrowseAsUserForm(form.Form):
     uid: str = form.label("ASF UID", "Enter the ASF UID to browse as.")
 
 
-class DeleteCommitteeKeysForm(forms.Typed):
-    committee_name = forms.select("Committee")
-    confirm_delete = forms.string(
-        "Confirmation",
-        validators=forms.constant("DELETE KEYS"),
-        placeholder="DELETE KEYS",
-    )
-    submit = forms.submit("Delete all keys for selected committee")
+class DeleteCommitteeKeysForm(form.Form):
+    committee_name: str = form.label("Committee", widget=form.Widget.SELECT)
+    confirm_delete: str = form.label("Confirmation", "Type DELETE KEYS to confirm")
+
+    @pydantic.field_validator("confirm_delete")
+    @classmethod
+    def validate_confirm_delete(cls, v: str) -> str:
+        if v != "DELETE KEYS":
+            raise ValueError("You must type DELETE KEYS exactly to confirm deletion")
+        return v
 
 
-class DeleteReleaseForm(forms.Typed):
-    """Form for deleting releases."""
+class DeleteReleaseForm(form.Form):
+    releases_to_delete: form.StrList = form.label("Select releases to delete", widget=form.Widget.CUSTOM)
+    confirm_delete: str = form.label("Confirmation", "Please type DELETE exactly to confirm deletion.")
 
-    confirm_delete = forms.string(
-        "Confirmation",
-        validators=forms.constant("DELETE"),
-        placeholder="DELETE",
-        description="Please type DELETE exactly to confirm deletion.",
-    )
-    submit = forms.submit("Delete selected releases permanently")
+    @pydantic.field_validator("confirm_delete")
+    @classmethod
+    def validate_confirm_delete(cls, v: str) -> str:
+        if v != "DELETE":
+            raise ValueError("You must type DELETE exactly to confirm deletion")
+        return v
+
+    @pydantic.field_validator("releases_to_delete")
+    @classmethod
+    def validate_releases_to_delete(cls, v: form.StrList) -> form.StrList:
+        if len(v) == 0:
+            raise ValueError("You must select at least one release to delete")
+        return v
 
 
 class LdapLookupForm(forms.Typed):
@@ -283,7 +295,7 @@ async def _data(session: web.Committer, model: str = "Committee") -> str:
 
 @admin.get("/delete-test-openpgp-keys")
 async def delete_test_openpgp_keys_get(session: web.Committer) -> web.Response:
-    """Display form to delete test user OpenPGP keys."""
+    """Display the form to delete test user OpenPGP keys."""
     if not config.get().ALLOW_TESTS:
         raise base.ASFQuartException("Test operations are disabled in this environment", errorcode=403)
 
@@ -323,102 +335,114 @@ async def delete_test_openpgp_keys_post(session: web.Committer) -> web.Response:
 
 @admin.get("/delete-committee-keys")
 async def delete_committee_keys_get(session: web.Committer) -> str | web.WerkzeugResponse:
-    return await _delete_committee_keys(session)
-
-
-@admin.post("/delete-committee-keys")
-async def delete_committee_keys_post(session: web.Committer) -> str | web.WerkzeugResponse:
-    return await _delete_committee_keys(session)
-
-
-async def _delete_committee_keys(session: web.Committer) -> str | web.WerkzeugResponse:
-    form = await DeleteCommitteeKeysForm.create_form()
+    """Display the form to delete committee keys."""
     async with db.session() as data:
         all_committees = await data.committee(_public_signing_keys=True).order_by(sql.Committee.name).all()
         committees_with_keys = [c for c in all_committees if c.public_signing_keys]
-    form.committee_name.choices = [(c.name, c.display_name) for c in committees_with_keys]
 
-    if await form.validate_on_submit():
-        committee_name = form.committee_name.data
-        async with db.session() as data:
-            committee_query = data.committee(name=committee_name)
-            via = sql.validate_instrumented_attribute
-            committee_query.query = committee_query.query.options(
-                orm.selectinload(via(sql.Committee.public_signing_keys)).selectinload(
-                    via(sql.PublicSigningKey.committees)
-                )
-            )
-            committee = await committee_query.get()
+    committee_choices = [(c.name, c.display_name) for c in committees_with_keys]
 
-            if not committee:
-                await quart.flash(f"Committee '{committee_name}' not found.", "error")
-                return await session.redirect(delete_committee_keys_get)
+    rendered_form = form.render(
+        model_cls=DeleteCommitteeKeysForm,
+        submit_label="Delete all keys for selected committee",
+        defaults={"committee_name": committee_choices},
+    )
+    return await template.render("delete-committee-keys.html", form=rendered_form)
 
-            keys_to_check = list(committee.public_signing_keys)
-            if not keys_to_check:
-                await quart.flash(f"Committee '{committee_name}' has no keys.", "info")
-                return await session.redirect(delete_committee_keys_get)
 
-            num_removed = len(committee.public_signing_keys)
-            committee.public_signing_keys.clear()
-            await data.flush()
+@admin.post("/delete-committee-keys")
+@admin.form(DeleteCommitteeKeysForm)
+async def delete_committee_keys_post(
+    session: web.Committer, delete_form: DeleteCommitteeKeysForm
+) -> str | web.WerkzeugResponse:
+    """Delete all keys for selected committee."""
+    committee_name = delete_form.committee_name
 
-            unused_deleted = 0
-            for key_obj in keys_to_check:
-                if not key_obj.committees:
-                    await data.delete(key_obj)
-                    unused_deleted += 1
+    async with db.session() as data:
+        committee_query = data.committee(name=committee_name)
+        via = sql.validate_instrumented_attribute
+        committee_query.query = committee_query.query.options(
+            orm.selectinload(via(sql.Committee.public_signing_keys)).selectinload(via(sql.PublicSigningKey.committees))
+        )
+        committee = await committee_query.get()
 
-            await data.commit()
-            await quart.flash(
-                f"Removed {num_removed} key links for '{committee_name}'. Deleted {unused_deleted} unused keys.",
-                "success",
-            )
-        return await session.redirect(delete_committee_keys_get)
+        if not committee:
+            await quart.flash(f"Committee '{committee_name}' not found.", "error")
+            return await session.redirect(delete_committee_keys_get)
 
-    elif quart.request.method == "POST":
-        await quart.flash("Form validation failed. Select committee and type DELETE KEYS.", "warning")
+        keys_to_check = list(committee.public_signing_keys)
+        if not keys_to_check:
+            await quart.flash(f"Committee '{committee_name}' has no keys.", "info")
+            return await session.redirect(delete_committee_keys_get)
 
-    return await template.render("delete-committee-keys.html", form=form)
+        num_removed = len(committee.public_signing_keys)
+        committee.public_signing_keys.clear()
+        await data.flush()
+
+        unused_deleted = 0
+        for key_obj in keys_to_check:
+            if not key_obj.committees:
+                await data.delete(key_obj)
+                unused_deleted += 1
+
+        await data.commit()
+        await quart.flash(
+            f"Removed {num_removed} key links for '{committee_name}'. Deleted {unused_deleted} unused keys.",
+            "success",
+        )
+
+    return await session.redirect(delete_committee_keys_get)
 
 
 @admin.get("/delete-release")
 async def delete_release_get(session: web.Committer) -> str | web.WerkzeugResponse:
-    return await _delete_release(session)
+    """Display the form to delete releases."""
+    async with db.session() as data:
+        releases = await data.release(_project=True).order_by(sql.Release.name).all()
+
+    if releases:
+        releases_widget = htpy.div[
+            [
+                htpy.div(".form-check")[
+                    htpy.input(
+                        class_="form-check-input",
+                        type="checkbox",
+                        name="releases_to_delete",
+                        value=release.name,
+                        id=f"release_{release.name}",
+                    ),
+                    htpy.label(".form-check-label", for_=f"release_{release.name}")[
+                        htpy.strong[release.name],
+                        f" ({release.project.display_name}, {release.phase.value.upper()})",
+                    ],
+                ]
+                for release in releases
+            ]
+        ]
+        block = htm.Block(htm.div)
+        block.append(releases_widget)
+        block.div(".form-text.mt-1")["Select one or more releases to delete permanently."]
+        releases_widget_with_help = block.collect()
+    else:
+        releases_widget_with_help = htpy.p(".text-muted")["No releases found in the database."]
+
+    rendered_form = form.render(
+        model_cls=DeleteReleaseForm,
+        submit_label="Delete selected releases permanently",
+        submit_classes="btn-danger",
+        custom={"releases_to_delete": releases_widget_with_help},
+    )
+
+    return await template.render("delete-release.html", form=rendered_form)
 
 
 @admin.post("/delete-release")
-async def delete_release_post(session: web.Committer) -> str | web.WerkzeugResponse:
-    return await _delete_release(session)
+@admin.form(DeleteReleaseForm)
+async def delete_release_post(session: web.Committer, delete_form: DeleteReleaseForm) -> str | web.WerkzeugResponse:
+    """Delete selected releases and their associated data and files."""
+    await _delete_releases(session, delete_form.releases_to_delete)
 
-
-async def _delete_release(session: web.Committer) -> str | web.WerkzeugResponse:
-    """Page to delete selected releases and their associated data and files."""
-    form = await DeleteReleaseForm.create_form()
-
-    if quart.request.method == "POST":
-        if await form.validate_on_submit():
-            form_data = await quart.request.form
-            releases_to_delete = form_data.getlist("releases_to_delete")
-
-            if not releases_to_delete:
-                await quart.flash("No releases selected for deletion.", "warning")
-                return await session.redirect(delete_release_get)
-
-            await _delete_releases(session, releases_to_delete)
-
-            # Redirecting back to the deletion page will refresh the list of releases too
-            return await session.redirect(delete_release_get)
-
-        # It's unlikely that form validation failed due to spurious release names
-        # Therefore we assume that the user forgot to type DELETE to confirm
-        await quart.flash("Form validation failed. Please type DELETE to confirm.", "warning")
-        # Fall through to the combined GET and failed form validation handling below
-
-    # For GET request or failed form validation
-    async with db.session() as data:
-        releases = await data.release(_project=True).order_by(sql.Release.name).all()
-    return await template.render("delete-release.html", form=form, releases=releases, stats=None)
+    return await session.redirect(delete_release_get)
 
 
 @admin.get("/env")
@@ -454,7 +478,7 @@ async def keys_check_post(session: web.Committer) -> web.QuartResponse:
 
 @admin.get("/keys/regenerate-all")
 async def keys_regenerate_all_get(session: web.Committer) -> web.QuartResponse:
-    """Display form to regenerate KEYS files."""
+    """Display the form to regenerate KEYS files."""
     rendered_form = form.render(
         model_cls=form.Empty,
         submit_label="Regenerate all KEYS files",
@@ -865,11 +889,12 @@ async def _delete_releases(session: web.Committer, releases_to_delete: list[str]
             fail_count += 1
             error_messages.append(f"{release_name}: Unexpected error ({e})")
 
+    releases = "release" if (success_count == 1) else "releases"
     if success_count > 0:
-        await quart.flash(f"Successfully deleted {success_count} release(s).", "success")
+        await quart.flash(f"Successfully deleted {success_count} {releases}.", "success")
     if fail_count > 0:
         errors_str = "\n".join(error_messages)
-        await quart.flash(f"Failed to delete {fail_count} release(s):\n{errors_str}", "error")
+        await quart.flash(f"Failed to delete {fail_count} {releases}:\n{errors_str}", "error")
 
 
 async def _get_filesystem_dirs() -> list[str]:
