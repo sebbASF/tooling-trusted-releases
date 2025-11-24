@@ -160,7 +160,7 @@ if a or b:
     ...
 </code></pre>
 <h3 id="use-terse-comments-on-their-own-lines">Use terse comments on their own lines</h3>
-<p>Place comments on dedicated lines preceding the relevant code block. Comments at the ends of lines are strictly reserved for linter or type checker directives. This convention enhances code scannability for such directives. General comments must not appear at the end of code lines. Keep comments concise, using sentence case without terminal punctuation. Each sentence forming a comment must occupy its own line.</p>
+<p>Place comments on dedicated lines preceding the relevant code block. Comments at the ends of lines are strictly reserved for linter or type checker directives. This convention enhances code scannability for such directives. General comments must not appear at the end of code lines. Keep comments concise, using sentence case without terminal punctuation. Each sentence forming a comment must occupy its own line. Comments must not include information about what has changed from earlier code revisions.</p>
 <code></code><h3 id="prefer-explicit-checks-over-assert">Prefer explicit checks over assert</h3>
 <p>We do not use <code>assert</code>. If you need to guard against invalid states or inputs, use standard <code>if</code> checks and raise appropriate exceptions. If you need to help type checkers understand the type of a variable within a specific code block, in other words if you need to narrow a type, then use <code>if isinstance(...)</code> or <code>if not isinstance(...)</code> as appropriate.</p>
 <code></code><h3 id="never-use-case-when-pattern-matching-exhaustive-types">Never use case _ when pattern matching exhaustive types</h3>
