@@ -78,29 +78,51 @@
           </ul>
         {% endfor %}
       {% endif %}
-    {% endif %}
-
-    {% set user_projects = user_projects_fn(current_user.uid) %}
-    {% if user_projects %}
-      {% set max_projects = 8 %}
-      <h3>Start a release</h3>
+    {% else %}
+      <h3>Browse</h3>
       <ul>
-        {% for project_name, project_full_name in user_projects[:max_projects] %}
-          <li>
-            <i class="bi bi-plus-circle"></i>
-            <a href="{{ as_url(get.start.selected, project_name=project_name) }}">{{ project_full_name.removeprefix("Apache ").removesuffix(" (Incubating)") }}</a>
-          </li>
-        {% endfor %}
-        {% if user_projects|length > max_projects %}
-          <li>
-            <i class="bi bi-three-dots"></i>
-            (<a href="{{ as_url(get.root.index) }}">{{ user_projects|length - max_projects }} more</a>)
-          </li>
-        {% endif %}
+        <li>
+          <i class="bi bi-view-list"></i>
+          <a href="{{ as_url(get.release.releases) }}">Releases</a>
+        </li>
+        <li>
+          <i class="bi bi-collection"></i>
+          <a href="{{ as_url(get.committees.directory) }}">Committees</a>
+        </li>
+      </ul>
+      <h3>Help</h3>
+      <ul>
+        <li>
+          <i class="bi bi-book"></i>
+          <a href="{{ as_url(get.docs.index) }}">Documentation</a>
+        </li>
+        <li>
+          <i class="bi bi-book"></i>
+          <a href="{{ as_url(get.root.policies) }}">ASF Policies</a>
+        </li>
       </ul>
     {% endif %}
 
     {% if current_user %}
+      {% set user_projects = user_projects_fn(current_user.uid) %}
+      {% if user_projects %}
+        {% set max_projects = 8 %}
+        <h3>Start a release</h3>
+        <ul>
+          {% for project_name, project_full_name in user_projects[:max_projects] %}
+            <li>
+              <i class="bi bi-plus-circle"></i>
+              <a href="{{ as_url(get.start.selected, project_name=project_name) }}">{{ project_full_name.removeprefix("Apache ").removesuffix(" (Incubating)") }}</a>
+            </li>
+          {% endfor %}
+          {% if user_projects|length > max_projects %}
+            <li>
+              <i class="bi bi-three-dots"></i>
+              (<a href="{{ as_url(get.root.index) }}">{{ user_projects|length - max_projects }} more</a>)
+            </li>
+          {% endif %}
+        </ul>
+      {% endif %}
       <h3>Security</h3>
       <ul>
         <li>
