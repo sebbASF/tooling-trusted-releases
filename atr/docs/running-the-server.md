@@ -28,16 +28,16 @@ There are lots of files and directories in the root of the ATR Git repository. T
 
 To run ATR locally after cloning the source, you will need to install the following dependencies:
 
+* [cmark](https://github.com/commonmark/cmark) (optional; for rebuilding documentation)
 * Any [POSIX](https://en.wikipedia.org/wiki/POSIX) compliant [make](https://frippery.org/make/)
 * [mkcert](https://github.com/FiloSottile/mkcert)
 * [Python 3.13](https://www.python.org/downloads/release/python-3138/)
 * [uv](https://docs.astral.sh/uv/#installation)
-* [cmark](https://github.com/commonmark/cmark)
 
 You can install Python 3.13 through your package manager or through uv. Here is how to install these dependencies on [Alpine Linux](https://en.wikipedia.org/wiki/Alpine_Linux):
 
 ```shell
-apk add curl git make mkcert@testing cmark
+apk add cmark curl git make mkcert@testing
 curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh
 uv python install 3.13
 ```
@@ -45,14 +45,13 @@ uv python install 3.13
 For macOS these instructions become:
 
 ```shell
-brew install mkcert cmark
+brew install cmark mkcert
 curl -LsSf https://astral.sh/uv/install.sh | sh
 rehash
-which uv # confirm matches
 uv python install 3.13
 ```
 
-These instructions should work in any POSIX style environment.
+ATR should work in any POSIX style environment.
 
 ## Run the server
 

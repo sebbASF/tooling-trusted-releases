@@ -18,25 +18,24 @@
 <h2 id="install-dependencies">Install dependencies</h2>
 <p>To run ATR locally after cloning the source, you will need to install the following dependencies:</p>
 <ul>
+<li><a href="https://github.com/commonmark/cmark">cmark</a> (optional; for rebuilding documentation)</li>
 <li>Any <a href="https://en.wikipedia.org/wiki/POSIX">POSIX</a> compliant <a href="https://frippery.org/make/">make</a></li>
 <li><a href="https://github.com/FiloSottile/mkcert">mkcert</a></li>
 <li><a href="https://www.python.org/downloads/release/python-3138/">Python 3.13</a></li>
 <li><a href="https://docs.astral.sh/uv/#installation">uv</a></li>
-<li><a href="https://github.com/commonmark/cmark">cmark</a></li>
 </ul>
 <p>You can install Python 3.13 through your package manager or through uv. Here is how to install these dependencies on <a href="https://en.wikipedia.org/wiki/Alpine_Linux">Alpine Linux</a>:</p>
-<pre><code class="language-shell">apk add curl git make mkcert@testing cmark
+<pre><code class="language-shell">apk add cmark curl git make mkcert@testing
 curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin" sh
 uv python install 3.13
 </code></pre>
 <p>For macOS these instructions become:</p>
-<pre><code class="language-shell">brew install mkcert cmark
+<pre><code class="language-shell">brew install cmark mkcert
 curl -LsSf https://astral.sh/uv/install.sh | sh
 rehash
-which uv # confirm matches
 uv python install 3.13
 </code></pre>
-<p>These instructions should work in any POSIX style environment.</p>
+<p>ATR should work in any POSIX style environment.</p>
 <h2 id="run-the-server">Run the server</h2>
 <p>Then, to run the server:</p>
 <pre><code class="language-shell">cd tooling-trusted-releases/
