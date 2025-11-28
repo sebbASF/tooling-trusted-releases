@@ -22,6 +22,7 @@ import quart
 
 import atr.config as config
 import atr.db as db
+import atr.db.interaction as interaction
 import atr.models.sql as sql
 import atr.util as util
 
@@ -66,6 +67,10 @@ async def announce_release_body(body: str, options: AnnounceReleaseOptions) -> s
             raise RuntimeError(f"Release {options.project_name} {options.version_name} has no committee")
         committee = release.committee
 
+        latest_rev = await interaction.latest_revision(release, caller_data=data)
+        revision_number = latest_rev.number if latest_rev else ""
+        revision_tag = latest_rev.tag if (latest_rev and latest_rev.tag) else ""
+
     routes_file_selected = get.file.selected
     download_path = util.as_url(
         routes_file_selected, project_name=options.project_name, version_name=options.version_name
@@ -77,6 +82,8 @@ async def announce_release_body(body: str, options: AnnounceReleaseOptions) -> s
     body = body.replace("[COMMITTEE]", committee.display_name)
     body = body.replace("[DOWNLOAD_URL]", download_url)
     body = body.replace("[PROJECT]", options.project_name)
+    body = body.replace("[REVISION]", revision_number)
+    body = body.replace("[TAG]", revision_tag)
     body = body.replace("[VERSION]", options.version_name)
     body = body.replace("[YOUR_ASF_ID]", options.asfuid)
     body = body.replace("[YOUR_FULL_NAME]", options.fullname)
@@ -105,6 +112,10 @@ async def start_vote_body(body: str, options: StartVoteOptions) -> str:
         if not release.committee:
             raise RuntimeError(f"Release {options.project_name} {options.version_name} has no committee")
         committee = release.committee
+
+        latest_rev = await interaction.latest_revision(release, caller_data=data)
+        revision_number = latest_rev.number if latest_rev else ""
+        revision_tag = latest_rev.tag if (latest_rev and latest_rev.tag) else ""
 
     try:
         host = quart.request.host
@@ -138,6 +149,8 @@ async def start_vote_body(body: str, options: StartVoteOptions) -> str:
     body = body.replace("[PROJECT]", project_short_display_name)
     body = body.replace("[RELEASE_CHECKLIST]", checklist_content)
     body = body.replace("[REVIEW_URL]", review_url)
+    body = body.replace("[REVISION]", revision_number)
+    body = body.replace("[TAG]", revision_tag)
     body = body.replace("[VERSION]", options.version_name)
     body = body.replace("[VOTE_ENDS_UTC]", options.vote_end)
     body = body.replace("[YOUR_ASF_ID]", options.asfuid)

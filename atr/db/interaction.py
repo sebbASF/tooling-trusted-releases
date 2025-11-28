@@ -225,10 +225,10 @@ async def latest_info(project_name: str, version_name: str) -> tuple[str, str, d
     return revision.number, revision.asfuid, revision.created
 
 
-async def latest_revision(release: sql.Release) -> sql.Revision | None:
+async def latest_revision(release: sql.Release, caller_data: db.Session | None = None) -> sql.Revision | None:
     if release.latest_revision_number is None:
         return None
-    async with db.session() as data:
+    async with db.ensure_session(caller_data) as data:
         return await data.revision(release_name=release.name, number=release.latest_revision_number).get()
 
 
