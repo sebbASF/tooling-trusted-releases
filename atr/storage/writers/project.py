@@ -104,6 +104,11 @@ class CommitteeMember(CommitteeParticipant):
             if project.category == "":
                 project.category = None
             await self.__data.commit()
+            self.__write_as.append_to_audit_log(
+                asf_uid=self.__asf_uid,
+                project_name=project.name,
+                category=new_category,
+            )
             return True
         return False
 
@@ -118,6 +123,11 @@ class CommitteeMember(CommitteeParticipant):
             if project.category == "":
                 project.category = None
             await self.__data.commit()
+            self.__write_as.append_to_audit_log(
+                asf_uid=self.__asf_uid,
+                project_name=project.name,
+                category=action_value,
+            )
             return True
         return False
 
@@ -153,6 +163,11 @@ class CommitteeMember(CommitteeParticipant):
 
         self.__data.add(project)
         await self.__data.commit()
+        self.__write_as.append_to_audit_log(
+            asf_uid=self.__asf_uid,
+            committee_name=committee_name,
+            project_name=label,
+        )
 
     async def delete(self, project_name: str) -> None:
         project = await self.__data.project(
@@ -195,6 +210,11 @@ class CommitteeMember(CommitteeParticipant):
             if project.programming_languages == "":
                 project.programming_languages = None
             await self.__data.commit()
+            self.__write_as.append_to_audit_log(
+                asf_uid=self.__asf_uid,
+                project_name=project.name,
+                language=new_language,
+            )
             return True
         return False
 
@@ -207,6 +227,11 @@ class CommitteeMember(CommitteeParticipant):
             if project.programming_languages == "":
                 project.programming_languages = None
             await self.__data.commit()
+            self.__write_as.append_to_audit_log(
+                asf_uid=self.__asf_uid,
+                project_name=project.name,
+                language=action_value,
+            )
             return True
         return False
 

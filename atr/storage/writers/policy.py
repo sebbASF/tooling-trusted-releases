@@ -124,6 +124,10 @@ class CommitteeMember(CommitteeParticipant):
         release_policy.preserve_download_files = policy_data.preserve_download_files
 
         await self.__data.commit()
+        self.__write_as.append_to_audit_log(
+            asf_uid=self.__asf_uid,
+            project_name=project_name,
+        )
 
     def __set_default_announce_release_template(
         self,

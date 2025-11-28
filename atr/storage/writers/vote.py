@@ -278,6 +278,12 @@ class CommitteeMember(CommitteeParticipant):
             await self.__data.refresh(release)
             success_message = "Vote marked as failed"
 
+        self.__write_as.append_to_audit_log(
+            asf_uid=self.__asf_uid,
+            project_name=project_name,
+            version_name=release.version,
+            vote_result=vote_result,
+        )
         return success_message
 
     async def resolve_release(
@@ -359,6 +365,14 @@ class CommitteeMember(CommitteeParticipant):
             asf_fullname,
             latest_vote_task,
             extra_destination=extra_destination,
+        )
+        # TODO: Could move this up before send_resolution
+        self.__write_as.append_to_audit_log(
+            asf_uid=self.__asf_uid,
+            project_name=project_name,
+            version_name=release.version,
+            vote_result=vote_result,
+            voting_round=voting_round,
         )
         return release, voting_round, success_message, error_message
 
