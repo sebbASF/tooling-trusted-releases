@@ -81,7 +81,7 @@
   {% if ongoing_tasks_count > 0 %}
     <div class="alert alert-warning" role="alert">
       <i class="bi bi-exclamation-triangle me-2"></i>
-      There {{ 'is' if ongoing_tasks_count == 1 else 'are' }} currently <strong>{{ ongoing_tasks_count }}</strong> background verification {{ 'task' if ongoing_tasks_count == 1 else 'tasks' }} running for the latest revision. Results shown below may be incomplete or outdated until the tasks finish. Refresh the page to see updates.
+      There {{ 'is' if ongoing_tasks_count == 1 else 'are' }} currently <strong>{{ ongoing_tasks_count }}</strong> background verification {{ 'task' if ongoing_tasks_count == 1 else 'tasks' }} running for the latest revision. Results shown below may be incomplete or outdated until the tasks finish. You cannot start a vote until the tasks finish. Refresh the page to see updates.
     </div>
   {% endif %}
 
