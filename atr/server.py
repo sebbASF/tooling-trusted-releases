@@ -70,7 +70,20 @@ class ApiOnlyOpenAPIProvider(quart_schema.OpenAPIProvider):
                 yield rule
 
 
-def app_create_base(app_config: type[config.AppConfig]) -> base.QuartApp:
+# FIXME: when running in SSL mode, you will receive these exceptions upon termination at times:
+#        ssl.SSLError: [SSL: APPLICATION_DATA_AFTER_CLOSE_NOTIFY] application data after close notify (_ssl.c:2706)
+#        related ticket: https://github.com/pgjones/hypercorn/issues/261
+#        in production, we actually do not need SSL mode as SSL termination is handled by the apache reverse proxy.
+#        the tooling-agenda app runs without SSL on agenda-test in a similar setup and it works fine.
+def main() -> None:
+    """Quart debug server"""
+    global app
+    if app is None:
+        app = _create_app(config.get())
+    app.run(port=8080, ssl_keyfile="key.pem", ssl_certfile="cert.pem")
+
+
+def _app_create_base(app_config: type[config.AppConfig]) -> base.QuartApp:
     """Create the base Quart application."""
     if asfquart.construct is ...:
         raise ValueError("asfquart.construct is not set")
@@ -79,7 +92,7 @@ def app_create_base(app_config: type[config.AppConfig]) -> base.QuartApp:
     return app
 
 
-def app_dirs_setup(app_config: type[config.AppConfig]) -> None:
+def _app_dirs_setup(app_config: type[config.AppConfig]) -> None:
     """Setup application directories."""
     if not os.path.isdir(app_config.STATE_DIR):
         raise RuntimeError(f"State directory not found: {app_config.STATE_DIR}")
@@ -97,7 +110,7 @@ def app_dirs_setup(app_config: type[config.AppConfig]) -> None:
         util.chmod_directories(directory, permissions=0o755)
 
 
-def app_setup_api_docs(app: base.QuartApp) -> None:
+def _app_setup_api_docs(app: base.QuartApp) -> None:
     """Configure OpenAPI documentation."""
     import quart_schema
 
@@ -122,7 +135,7 @@ def app_setup_api_docs(app: base.QuartApp) -> None:
     )
 
 
-def app_setup_context(app: base.QuartApp) -> None:
+def _app_setup_context(app: base.QuartApp) -> None:
     """Setup application context processor."""
 
     @app.context_processor
@@ -152,7 +165,7 @@ def app_setup_context(app: base.QuartApp) -> None:
         }
 
 
-def app_setup_lifecycle(app: base.QuartApp) -> None:
+def _app_setup_lifecycle(app: base.QuartApp) -> None:
     """Setup application lifecycle hooks."""
 
     @app.before_serving
@@ -168,7 +181,7 @@ def app_setup_lifecycle(app: base.QuartApp) -> None:
         metadata_scheduler_task = asyncio.create_task(_metadata_update_scheduler())
         app.extensions["metadata_scheduler"] = metadata_scheduler_task
 
-        await initialise_test_environment()
+        await _initialise_test_environment()
 
         conf = config.get()
         pubsub_url = conf.PUBSUB_URL
@@ -233,7 +246,7 @@ def app_setup_lifecycle(app: base.QuartApp) -> None:
         app.background_tasks.clear()
 
 
-def app_setup_logging(app: base.QuartApp, config_mode: config.Mode, app_config: type[config.AppConfig]) -> None:
+def _app_setup_logging(app: base.QuartApp, config_mode: config.Mode, app_config: type[config.AppConfig]) -> None:
     """Setup application logging."""
     import logging
     import logging.handlers
@@ -288,22 +301,22 @@ def app_setup_logging(app: base.QuartApp, config_mode: config.Mode, app_config: 
             log.info(f"STATE_DIR    = {app_config.STATE_DIR}")
 
 
-def create_app(app_config: type[config.AppConfig]) -> base.QuartApp:
+def _create_app(app_config: type[config.AppConfig]) -> base.QuartApp:
     """Create and configure the application."""
     config_mode = config.get_mode()
-    app_dirs_setup(app_config)
+    _app_dirs_setup(app_config)
     log.performance_init()
-    app = app_create_base(app_config)
+    app = _app_create_base(app_config)
 
-    app_setup_api_docs(app)
+    _app_setup_api_docs(app)
     quart_wtf.CSRFProtect(app)
     db.init_database(app)
-    register_routes(app)
+    _register_routes(app)
     blueprints.register(app)
     filters.register_filters(app)
-    app_setup_context(app)
-    app_setup_lifecycle(app)
-    app_setup_logging(app, config_mode, app_config)
+    _app_setup_context(app)
+    _app_setup_lifecycle(app)
+    _app_setup_logging(app, config_mode, app_config)
 
     # do not enable template pre-loading if we explicitly want to reload templates
     if not app_config.TEMPLATES_AUTO_RELOAD:
@@ -330,23 +343,7 @@ def create_app(app_config: type[config.AppConfig]) -> base.QuartApp:
     return app
 
 
-async def _metadata_update_scheduler() -> None:
-    """Periodically schedule remote metadata updates."""
-    # Wait one minute to allow the server to start
-    await asyncio.sleep(60)
-
-    while True:
-        try:
-            task = await tasks.metadata_update(asf_uid="system")
-            log.info(f"Scheduled remote metadata update with ID {task.id}")
-        except Exception as e:
-            log.exception(f"Failed to schedule remote metadata update: {e!s}")
-
-        # Schedule next update in 24 hours
-        await asyncio.sleep(86400)
-
-
-async def initialise_test_environment() -> None:
+async def _initialise_test_environment() -> None:
     if not config.get().ALLOW_TESTS:
         return
 
@@ -378,15 +375,23 @@ async def initialise_test_environment() -> None:
             await data.commit()
 
 
-def main() -> None:
-    """Quart debug server"""
-    global app
-    if app is None:
-        app = create_app(config.get())
-    app.run(port=8080, ssl_keyfile="key.pem", ssl_certfile="cert.pem")
+async def _metadata_update_scheduler() -> None:
+    """Periodically schedule remote metadata updates."""
+    # Wait one minute to allow the server to start
+    await asyncio.sleep(60)
+
+    while True:
+        try:
+            task = await tasks.metadata_update(asf_uid="system")
+            log.info(f"Scheduled remote metadata update with ID {task.id}")
+        except Exception as e:
+            log.exception(f"Failed to schedule remote metadata update: {e!s}")
+
+        # Schedule next update in 24 hours
+        await asyncio.sleep(86400)
 
 
-def register_routes(app: base.QuartApp) -> None:
+def _register_routes(app: base.QuartApp) -> None:
     # Add a global error handler to show helpful error messages with tracebacks
     @app.errorhandler(Exception)
     async def handle_any_exception(error: Exception) -> Any:
@@ -423,13 +428,7 @@ def register_routes(app: base.QuartApp) -> None:
         return await template.render("notfound.html", error="404 Not Found", traceback="", status_code=404), 404
 
 
-# FIXME: when running in SSL mode, you will receive these exceptions upon termination at times:
-#        ssl.SSLError: [SSL: APPLICATION_DATA_AFTER_CLOSE_NOTIFY] application data after close notify (_ssl.c:2706)
-#        related ticket: https://github.com/pgjones/hypercorn/issues/261
-#        in production, we actually do not need SSL mode as SSL termination is handled by the apache reverse proxy.
-#        the tooling-agenda app runs without SSL on agenda-test in a similar setup and it works fine.
-
 if __name__ == "__main__":
     main()
 else:
-    app = create_app(config.get())
+    app = _create_app(config.get())

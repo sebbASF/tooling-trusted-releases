@@ -26,6 +26,6 @@ then
   rm -f "$tmp"
 else
   cp "$file" "$backup"
-  diff -u "$file" "$tmp"
+  diff -u "$file" "$tmp" || :
   mv "$tmp" "$file"
 fi
