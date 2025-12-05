@@ -37,6 +37,10 @@ check-extra:
 	@find atr -name '*.py' -exec python3 scripts/interface_order.py {} --quiet \;
 	@find atr -name '*.py' -exec python3 scripts/interface_privacy.py {} --quiet \;
 
+check-heavy:
+	git add -A
+	uv run pre-commit run --all-files --config .pre-commit-heavy.yaml
+
 check-light:
 	git add -A
 	uv run pre-commit run --all-files --config .pre-commit-light.yaml
