@@ -28,17 +28,16 @@ repos:
         - --config=p/secrets
         - --config=p/security-audit
         - --config=p/sql-injection
-        # - --config=r/python.lang.security.audit.dangerous-asyncio-shell-audit
         - --disable-version-check
         - --error
         - --exclude-rule=generic.html-templates.security.var-in-href.var-in-href
         - --exclude-rule=html.security.plaintext-http-link.plaintext-http-link
         - --exclude-rule=python.flask.security.xss.audit.template-unescaped-with-safe.template-unescaped-with-safe
+        - --exclude-rule=python.lang.security.audit.dangerous-annotations-usage.dangerous-annotations-usage
+        - --exclude-rule=python.lang.security.audit.dangerous-asyncio-create-exec-audit.dangerous-asyncio-create-exec-audit
+        - --exclude-rule=python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit
         - --exclude-rule=python.lang.security.use-defused-xml-parse.use-defused-xml-parse
         - --exclude-rule=python.lang.security.use-defused-xml.use-defused-xml
-        - --exclude-rule=python.lang.security.audit.dangerous-asyncio-create-exec-audit.dangerous-asyncio-create-exec-audit
-        - --exclude-rule=python.lang.security.audit.dangerous-annotations-usage.dangerous-annotations-usage
-        - --exclude-rule=python.lang.security.audit.dangerous-subprocess-use-audit.dangerous-subprocess-use-audit
         - --exclude=migrations/versions/0027_2025.09.08_69e565eb.py
         - --metrics=off
         - --quiet

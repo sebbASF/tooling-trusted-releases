@@ -552,8 +552,8 @@ async def _step_07c_ensure_release_object_for_write(project_name: str, version_n
 async def _step_08_execute_rsync(process: asyncssh.SSHServerProcess, argv: list[str]) -> int:
     """Execute the modified rsync command."""
     log.info(f"Executing modified rsync command: {' '.join(argv)}")
-    proc = await asyncio.create_subprocess_shell(
-        " ".join(argv),
+    proc = await asyncio.create_subprocess_exec(
+        *argv,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
