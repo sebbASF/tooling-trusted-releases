@@ -109,7 +109,7 @@
           <form action="{{ as_url(post.resolve.selected, project_name=release.project.name, version_name=release.version) }}"
                 method="post"
                 class="mb-0">
-            {{ resolve_form.hidden_tag() }}
+            {{ csrf_input|safe }}
             <input type="hidden" name="variant" value="tabulate" />
             <button type="submit" class="btn btn-success">
               <i class="bi bi-clipboard-check me-1"></i> Resolve vote

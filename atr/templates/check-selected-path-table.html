@@ -60,7 +60,7 @@
                 <form method="post"
                       action="{{ as_url(post.keys.import_selected_revision, project_name=project_name, version_name=version_name) }}"
                       class="d-inline mb-0">
-                  {{ empty_form.hidden_tag() }}
+                  {{ csrf_input|safe }}
 
                   <button type="submit" class="btn btn-sm btn-outline-primary">Import keys</button>
                 </form>

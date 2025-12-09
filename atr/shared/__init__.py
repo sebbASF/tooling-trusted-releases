@@ -17,8 +17,6 @@
 
 from typing import TYPE_CHECKING, Final
 
-import wtforms
-
 import atr.db as db
 import atr.db.interaction as interaction
 import atr.form as form
@@ -85,7 +83,7 @@ async def check(
     release: sql.Release,
     task_mid: str | None = None,
     vote_form: htm.Element | None = None,
-    resolve_form: wtforms.Form | None = None,
+    resolve_form: htm.Element | None = None,
     archive_url: str | None = None,
     vote_task: sql.Task | None = None,
     can_vote: bool = False,
@@ -193,6 +191,7 @@ async def check(
         archive_url=archive_url,
         vote_task_warnings=vote_task_warnings,
         empty_form=empty_form,
+        csrf_input=str(form.csrf_input()),
         resolve_form=resolve_form,
         has_files=has_files,
         strict_checking_errors=strict_checking_errors,

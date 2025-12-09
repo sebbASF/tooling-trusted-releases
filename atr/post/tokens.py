@@ -28,16 +28,14 @@ import atr.htm as htm
 import atr.jwtoken as jwtoken
 import atr.shared as shared
 import atr.storage as storage
-import atr.util as util
 import atr.web as web
 
 _EXPIRY_DAYS: Final[int] = 180
 
 
 @post.committer("/tokens/jwt")
+@post.empty()
 async def jwt_post(session: web.Committer) -> web.QuartResponse:
-    await util.validate_empty_form()
-
     jwt_token = jwtoken.issue(session.uid)
     return web.TextResponse(jwt_token)
 

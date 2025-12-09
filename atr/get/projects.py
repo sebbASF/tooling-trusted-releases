@@ -27,7 +27,6 @@ import atr.construct as construct
 import atr.db as db
 import atr.db.interaction as interaction
 import atr.form as form
-import atr.forms as forms
 import atr.get.committees as committees
 import atr.get.file as file
 import atr.get.start as start
@@ -98,7 +97,21 @@ async def projects(session: web.Committer | None) -> str:
     """Main project directory page."""
     async with db.session() as data:
         projects = await data.project(_committee=True).order_by(sql.Project.full_name).all()
-        return await template.render("projects.html", projects=projects, empty_form=await forms.Empty.create_form())
+
+    delete_forms: dict[str, htm.Element] = {}
+    for project in projects:
+        delete_forms[project.name] = form.render(
+            model_cls=shared.projects.DeleteSelectedProject,
+            action=util.as_url(post.projects.delete),
+            form_classes=".d-inline-block.m-0",
+            submit_classes="btn-sm btn-outline-danger",
+            submit_label="Delete project",
+            empty=True,
+            defaults={"project_name": project.name},
+            confirm="Are you sure you want to delete this project? This cannot be undone.",
+        )
+
+    return await template.render("projects.html", projects=projects, delete_forms=delete_forms)
 
 
 @get.committer("/project/select")
@@ -286,22 +299,16 @@ def _render_delete_section(project: sql.Project) -> htm.Element:
     section = htm.Block(htm.div)
     section.h2["Actions"]
 
-    delete_form = htm.form(
-        ".d-inline-block.m-0",
-        method="post",
+    delete_form = form.render(
+        shared.projects.DeleteProjectForm,
         action=util.as_url(post.projects.view, name=project.name),
-        onsubmit=(
-            f"return confirm('Are you sure you want to delete the project "
-            f"\\'{project.display_name}\\'? This cannot be undone.');"
-        ),
-    )[
-        form.csrf_input(),
-        htpy.input(type="hidden", name="project_name", value=project.name),
-        htpy.input(type="hidden", name="variant", value="delete_project"),
-        htpy.button(".btn.btn-sm.btn-outline-danger", type="submit", title=f"Delete {project.display_name}")[
-            htpy.i(".bi.bi-trash"), " Delete project"
-        ],
-    ]
+        form_classes="",
+        submit_classes="btn-sm btn-outline-danger",
+        submit_label="Delete project",
+        defaults={"project_name": project.name},
+        confirm="Are you sure you want to delete this project? This cannot be undone.",
+        empty=True,
+    )
 
     section.div(".my-3")[delete_form]
     return section.collect()

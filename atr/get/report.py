@@ -22,7 +22,6 @@ import aiofiles.os
 import asfquart.base as base
 
 import atr.blueprints.get as get
-import atr.forms as forms
 import atr.models.sql as sql
 import atr.storage as storage
 import atr.template as template
@@ -80,5 +79,4 @@ async def selected_path(session: web.Committer, project_name: str, version_name:
         member_results=check_results.member_results_list,
         ignored_results=check_results.ignored_checks,
         format_file_size=util.format_file_size,
-        empty_form=await forms.Empty.create_form(),
     )

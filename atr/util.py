@@ -42,12 +42,10 @@ import asfquart.session as session
 import gitignore_parser
 import jinja2
 import quart
-import wtforms
 
 # NOTE: The atr.db module imports this module
 # Therefore, this module must not import atr.db
 import atr.config as config
-import atr.forms as forms
 import atr.ldap as ldap
 import atr.log as log
 import atr.models.sql as sql
@@ -986,21 +984,6 @@ def validate_as_type[T](value: Any, t: type[T]) -> T:
     if not isinstance(value, t):
         raise ValueError(f"Expected {t}, got {type(value)}")
     return value
-
-
-async def validate_empty_form() -> None:
-    empty_form = await forms.Empty.create_form(data=await quart.request.form)
-    if not await empty_form.validate_on_submit():
-        raise base.ASFQuartException("Invalid form submission. Please check your input and try again.", errorcode=400)
-
-
-def validate_vote_duration(form: wtforms.Form, field: wtforms.IntegerField) -> None:
-    """Checks if the value is 0 or between 72 and 144."""
-    if field.data is None:
-        # TODO: Check that this is what we intend
-        return
-    if not ((field.data == 0) or (72 <= field.data <= 144)):
-        raise wtforms.validators.ValidationError("Minimum voting period must be 0 hours, or between 72 and 144 hours")
 
 
 def version_name_error(version_name: str) -> str | None:

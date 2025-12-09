@@ -268,6 +268,10 @@ class DeleteProjectForm(form.Form):
     project_name: str = form.label("Project name", widget=form.Widget.HIDDEN)
 
 
+class DeleteSelectedProject(form.Form):
+    project_name: str = form.label("Project name", widget=form.Widget.HIDDEN)
+
+
 type ProjectViewForm = Annotated[
     ComposePolicyForm
     | VotePolicyForm

@@ -26,7 +26,6 @@ import atr.get as get
 import atr.models.sql as sql
 import atr.shared as shared
 import atr.storage as storage
-import atr.util as util
 import atr.web as web
 
 
@@ -53,14 +52,12 @@ async def add_project(
 
 
 @post.committer("/project/delete")
-async def delete(session: web.Committer) -> web.WerkzeugResponse:
+@post.form(shared.projects.DeleteSelectedProject)
+async def delete(
+    session: web.Committer, delete_selected_project_form: shared.projects.DeleteSelectedProject
+) -> web.WerkzeugResponse:
     """Delete a project created by the user."""
-    # TODO: This is not truly empty, so make a form object for this
-    await util.validate_empty_form()
-    form_data = await quart.request.form
-    project_name = form_data.get("project_name")
-    if not project_name:
-        return await session.redirect(get.projects.projects, error="Missing project name for deletion.")
+    project_name = delete_selected_project_form.project_name
 
     async with storage.write(session) as write:
         wacm = await write.as_project_committee_member(project_name)
