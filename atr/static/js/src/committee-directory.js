@@ -17,24 +17,24 @@ function filterCommitteesByText() {
 	for (const card of cards) {
 		const nameElement = card.querySelector(".card-title");
 		const name = nameElement.textContent.trim();
-		if (!projectFilter) {
-			card.parentElement.hidden = false;
-			visibleCount++;
-		} else {
+		if (projectFilter) {
 			let regex;
 			try {
 				regex = new RegExp(projectFilter, "i");
-			} catch (e) {
-				const escapedFilter = projectFilter.replace(
+			} catch {
+				const escapedFilter = projectFilter.replaceAll(
 					/[.*+?^${}()|[\]\\]/g,
 					"\\$&",
 				);
 				regex = new RegExp(escapedFilter, "i");
 			}
-			card.parentElement.hidden = !name.match(regex);
+			card.parentElement.hidden = !regex.test(name);
 			if (!card.parentElement.hidden) {
 				visibleCount++;
 			}
+		} else {
+			card.parentElement.hidden = false;
+			visibleCount++;
 		}
 	}
 	document.getElementById("committee-count").textContent = visibleCount;
@@ -84,14 +84,15 @@ if (participantButton) {
 	});
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-	// Hide images that fail to load
+function setupImageErrorHandlers() {
 	document.querySelectorAll(".page-logo").forEach((img) => {
 		img.addEventListener("error", function () {
 			this.style.display = "none";
 		});
 	});
+}
 
+function initCommitteeVisibility() {
 	allCommitteeCards = Array.from(
 		document.querySelectorAll(".page-project-card"),
 	);
@@ -125,18 +126,19 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	}
 	committeeCountSpan.textContent = initialVisibleCount;
+}
 
-	// Add a click listener to project subcards to handle navigation
-	// TODO: Improve accessibility
+function setupSubcardNavigation() {
 	document.querySelectorAll(".page-project-subcard").forEach((subcard) => {
-		subcard.addEventListener("click", function (event) {
+		subcard.addEventListener("click", function () {
 			if (this.dataset.projectUrl) {
 				window.location.href = this.dataset.projectUrl;
 			}
 		});
 	});
+}
 
-	// Add a click listener for toggling project visibility within each committee
+function setupProjectToggleButtons() {
 	document
 		.querySelectorAll(".page-toggle-committee-projects")
 		.forEach((button) => {
@@ -163,4 +165,15 @@ document.addEventListener("DOMContentLoaded", () => {
 				}
 			});
 		});
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+	// Hide images that fail to load
+	setupImageErrorHandlers();
+	initCommitteeVisibility();
+	// Add a click listener to project subcards to handle navigation
+	// Note that we should improve accessibility here
+	setupSubcardNavigation();
+	// Add a click listener for toggling project visibility within each committee
+	setupProjectToggleButtons();
 });
