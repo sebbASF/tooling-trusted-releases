@@ -8,12 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	const formTexts = document.querySelectorAll(".form-text, .text-muted");
 	formTexts.forEach((element) => {
-		element.textContent = element.textContent.replace(
-			/Example/g,
+		element.textContent = element.textContent.replaceAll(
+			"Example",
 			committeeDisplayName,
 		);
-		element.textContent = element.textContent.replace(
-			/example/g,
+		element.textContent = element.textContent.replaceAll(
+			"example",
 			committeeName.toLowerCase(),
 		);
 	});

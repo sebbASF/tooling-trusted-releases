@@ -5,14 +5,14 @@ function filter() {
 	for (const card of cards) {
 		const nameElement = card.querySelector(".card-title");
 		const name = nameElement.innerHTML;
-		if (!projectFilter) {
-			card.parentElement.hidden = false;
-			visibleCount++;
-		} else {
-			card.parentElement.hidden = !name.match(new RegExp(projectFilter, "i"));
+		if (projectFilter) {
+			card.parentElement.hidden = !new RegExp(projectFilter, "i").test(name);
 			if (!card.parentElement.hidden) {
 				visibleCount++;
 			}
+		} else {
+			card.parentElement.hidden = false;
+			visibleCount++;
 		}
 	}
 	document.getElementById("project-count").textContent = visibleCount;
@@ -36,7 +36,7 @@ document.querySelectorAll(".page-project-card").forEach((card) => {
 		if (event.target.closest("form")) {
 			return;
 		}
-		window.location.href = this.getAttribute("data-project-url");
+		window.location.href = this.dataset.projectUrl;
 	});
 });
 

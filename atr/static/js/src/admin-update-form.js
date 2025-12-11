@@ -50,10 +50,10 @@ function addStatusMessage(parentElement, message, category) {
 	if (category === "error") {
 		const prefixElement = document.createElement("strong");
 		const textElement = document.createTextNode("Error: ");
-		prefixElement.appendChild(textElement);
-		divElement.appendChild(prefixElement);
+		prefixElement.append(textElement);
+		divElement.append(prefixElement);
 	}
 	const textNode = document.createTextNode(message);
-	divElement.appendChild(textNode);
-	parentElement.appendChild(divElement);
+	divElement.append(textNode);
+	parentElement.append(divElement);
 }
