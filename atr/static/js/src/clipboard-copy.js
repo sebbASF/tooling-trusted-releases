@@ -1,9 +1,11 @@
+// We should consider merging this functionality with copy-variable.js
+
 document.addEventListener("DOMContentLoaded", () => {
 	const copyButtons = document.querySelectorAll(".atr-copy-btn");
 
 	copyButtons.forEach((button) => {
 		button.addEventListener("click", function () {
-			const targetId = this.getAttribute("data-clipboard-target");
+			const targetId = this.dataset.clipboardTarget;
 			const targetElement = document.querySelector(targetId);
 
 			if (targetElement) {

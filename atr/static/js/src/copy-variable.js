@@ -1,3 +1,5 @@
+// We should consider merging this functionality with clipboard-copy.js
+
 document.addEventListener("DOMContentLoaded", () => {
 	document.querySelectorAll(".copy-var-btn").forEach((btn) => {
 		btn.addEventListener("click", () => {
