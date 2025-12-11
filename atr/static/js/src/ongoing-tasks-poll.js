@@ -24,20 +24,49 @@
 	function restartProgress() {
 		if (!progress) return;
 		progress.style.animation = "none";
-		progress.offsetHeight;
+		// Force a reflow to reset the animation
+		void progress.offsetHeight;
 		progress.style.animation = `poll-grow ${pollInterval}ms linear forwards`;
+	}
+
+	function setProgressPolling() {
+		if (!progress) return;
+		progress.style.animation = "none";
+		progress.style.width = "100%";
+		progress.classList.remove("bg-warning");
+		progress.classList.add(
+			"bg-info",
+			"progress-bar-striped",
+			"progress-bar-animated",
+		);
+	}
+
+	function setProgressIdle() {
+		if (!progress) return;
+		progress.classList.remove(
+			"bg-info",
+			"progress-bar-striped",
+			"progress-bar-animated",
+		);
+		progress.classList.add("bg-warning");
 	}
 
 	function updateBanner(count) {
 		if (!countSpan || !textSpan) return;
 
 		currentCount = count;
-		countSpan.textContent = count;
 
 		const taskWord = count === 1 ? "task" : "tasks";
 		const isAre = count === 1 ? "is" : "are";
-		// TODO: Migrate away from setting innerHTML
-		textSpan.innerHTML = `There ${isAre} currently <strong id="ongoing-tasks-count">${count}</strong> background verification ${taskWord} running for the latest revision. Results shown below may be incomplete or outdated until the tasks finish.`;
+		const strong = document.createElement("strong");
+		strong.id = "ongoing-tasks-count";
+		strong.textContent = count;
+		textSpan.textContent = "";
+		textSpan.append(
+			`There ${isAre} currently `,
+			strong,
+			` background verification ${taskWord} running for the latest revision. Results shown below may be incomplete or outdated until the tasks finish.`,
+		);
 
 		if (count === 0) {
 			// Banner always exists, but we hide it
@@ -65,30 +94,14 @@
 	function pollOngoingTasks() {
 		if (currentCount === 0) return;
 
-		if (progress) {
-			progress.style.animation = "none";
-			progress.style.width = "100%";
-			progress.classList.remove("bg-warning");
-			progress.classList.add(
-				"bg-info",
-				"progress-bar-striped",
-				"progress-bar-animated",
-			);
-		}
+		setProgressPolling();
 		fetch(apiUrl)
 			.then((response) => {
 				if (!response.ok) throw new Error(`HTTP ${response.status}`);
 				return response.json();
 			})
 			.then((data) => {
-				if (progress) {
-					progress.classList.remove(
-						"bg-info",
-						"progress-bar-striped",
-						"progress-bar-animated",
-					);
-					progress.classList.add("bg-warning");
-				}
+				setProgressIdle();
 				const newCount = data.ongoing || 0;
 				if (newCount !== currentCount) {
 					updateBanner(newCount);
@@ -100,14 +113,7 @@
 			})
 			.catch((error) => {
 				console.error("Error polling ongoing tasks:", error);
-				if (progress) {
-					progress.classList.remove(
-						"bg-info",
-						"progress-bar-striped",
-						"progress-bar-animated",
-					);
-					progress.classList.add("bg-warning");
-				}
+				setProgressIdle();
 				restartProgress();
 				// Double the interval when there's an error
 				setTimeout(pollOngoingTasks, pollInterval * 2);
