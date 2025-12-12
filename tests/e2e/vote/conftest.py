@@ -20,7 +20,7 @@ from __future__ import annotations
 import pathlib
 from typing import TYPE_CHECKING, Final
 
-import e2e.helpers as helpers  # type: ignore[reportMissingImports]
+import e2e.helpers as helpers
 import pytest
 
 if TYPE_CHECKING:

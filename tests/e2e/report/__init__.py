@@ -14,34 +14,3 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-import e2e.helpers as helpers
-import pytest
-
-if TYPE_CHECKING:
-    from collections.abc import Generator
-
-    from playwright.sync_api import Page
-
-
-@pytest.fixture
-def page_index(page: Page) -> Generator[Page]:
-    helpers.visit(page, "/")
-    yield page
-
-
-@pytest.fixture
-def page_policies(page: Page) -> Generator[Page]:
-    helpers.visit(page, "/policies")
-    yield page
-
-
-@pytest.fixture
-def page_about(page: Page) -> Generator[Page]:
-    helpers.log_in(page)
-    helpers.visit(page, "/about")
-    yield page

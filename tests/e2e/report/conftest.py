@@ -26,18 +26,73 @@ import pytest
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    from playwright.sync_api import Browser, BrowserContext, Page
+    from playwright.sync_api import Browser, BrowserContext, Locator, Page
 
 PROJECT_NAME: Final[str] = "test"
-VERSION_NAME: Final[str] = "0.1+compose"
+VERSION_NAME: Final[str] = "0.1+report"
 FILE_NAME: Final[str] = "apache-test-0.2.tar.gz"
 CURRENT_DIR: Final[pathlib.Path] = pathlib.Path(__file__).parent.resolve()
+REPORT_URL: Final[str] = f"/report/{PROJECT_NAME}/{VERSION_NAME}/{FILE_NAME}"
 COMPOSE_URL: Final[str] = f"/compose/{PROJECT_NAME}/{VERSION_NAME}"
 
 
+@pytest.fixture
+def details_elements(page_report: Page) -> Locator:
+    """Get details elements, fail if none exist."""
+    elements = page_report.locator("details")
+    if elements.count() == 0:
+        pytest.fail("No details elements found")
+    return elements
+
+
+@pytest.fixture
+def member_filter_input(page_report: Page, member_rows: Locator) -> Locator:
+    """Get member path filter input, fail if not present."""
+    filter_input = page_report.locator("#member-path-filter")
+    if filter_input.count() == 0:
+        pytest.fail("Member path filter not present")
+    return filter_input
+
+
+@pytest.fixture
+def member_rows(page_report: Page) -> Locator:
+    """Get member result rows, fail if none exist."""
+    rows = page_report.locator(".atr-result-member")
+    if rows.count() == 0:
+        pytest.fail("No member results found")
+    return rows
+
+
+@pytest.fixture
+def page_report(report_context: BrowserContext) -> Generator[Page]:
+    """Navigate to the report page with a fresh page for each test."""
+    page = report_context.new_page()
+    helpers.visit(page, REPORT_URL)
+    yield page
+    page.close()
+
+
+@pytest.fixture
+def primary_success_rows(page_report: Page) -> Locator:
+    """Get primary success rows, fail if none exist."""
+    rows = page_report.locator(".atr-result-primary.atr-result-status-success")
+    if rows.count() == 0:
+        pytest.fail("No primary success rows found")
+    return rows
+
+
+@pytest.fixture
+def primary_success_toggle(page_report: Page) -> Locator:
+    """Get primary success toggle button, fail if not present."""
+    toggle = page_report.locator("#btn-toggle-primary-success")
+    if toggle.count() == 0:
+        pytest.fail("Primary success toggle not present")
+    return toggle
+
+
 @pytest.fixture(scope="module")
-def compose_context(browser: Browser) -> Generator[BrowserContext]:
-    """Create a release in the compose phase with completed tasks."""
+def report_context(browser: Browser) -> Generator[BrowserContext]:
+    """Create a release with an uploaded file and completed tasks."""
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
 
@@ -63,15 +118,6 @@ def compose_context(browser: Browser) -> Generator[BrowserContext]:
     yield context
 
     context.close()
-
-
-@pytest.fixture
-def page_compose(compose_context: BrowserContext) -> Generator[Page]:
-    """Navigate to the compose page with a fresh page for each test."""
-    page = compose_context.new_page()
-    helpers.visit(page, COMPOSE_URL)
-    yield page
-    page.close()
 
 
 def _delete_release_if_exists(page: Page) -> None:
