@@ -17,10 +17,7 @@
  *  under the License.
  */
 
-document.addEventListener("DOMContentLoaded", () => {
-	let debounceTimeout;
-	const debounceDelay = 500;
-
+function getVotePreviewElements() {
 	const bodyTextarea = document.getElementById("body");
 	const voteDurationInput = document.getElementById("vote_duration");
 	const textPreviewContent = document.getElementById(
@@ -31,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	if (!bodyTextarea || !voteDurationInput || !textPreviewContent || !voteForm) {
 		console.error("Required elements for vote preview not found. Exiting.");
-		return;
+		return null;
 	}
 
 	const previewUrl = configElement ? configElement.dataset.previewUrl : null;
@@ -42,11 +39,30 @@ document.addEventListener("DOMContentLoaded", () => {
 		console.error(
 			"Required data attributes or CSRF token not found for vote preview.",
 		);
-		return;
+		return null;
 	}
-	const csrfToken = csrfTokenInput.value;
 
-	function fetchAndUpdateVotePreview() {
+	return {
+		bodyTextarea,
+		voteDurationInput,
+		textPreviewContent,
+		previewUrl,
+		minHours,
+		csrfToken: csrfTokenInput.value,
+	};
+}
+
+function createPreviewFetcher(elements) {
+	const {
+		bodyTextarea,
+		voteDurationInput,
+		textPreviewContent,
+		previewUrl,
+		minHours,
+		csrfToken,
+	} = elements;
+
+	return function fetchAndUpdateVotePreview() {
 		const bodyContent = bodyTextarea.value;
 		const voteDuration = voteDurationInput.value || minHours;
 
@@ -77,17 +93,29 @@ document.addEventListener("DOMContentLoaded", () => {
 				console.error("Error fetching email preview:", error);
 				textPreviewContent.textContent = `Error loading preview:\n${error.message}`;
 			});
-	}
+	};
+}
 
-	bodyTextarea.addEventListener("input", () => {
+function setupVotePreviewListeners(elements, fetchPreview) {
+	let debounceTimeout;
+	const debounceDelay = 500;
+
+	elements.bodyTextarea.addEventListener("input", () => {
 		clearTimeout(debounceTimeout);
-		debounceTimeout = setTimeout(fetchAndUpdateVotePreview, debounceDelay);
+		debounceTimeout = setTimeout(fetchPreview, debounceDelay);
 	});
 
-	voteDurationInput.addEventListener("input", () => {
+	elements.voteDurationInput.addEventListener("input", () => {
 		clearTimeout(debounceTimeout);
-		debounceTimeout = setTimeout(fetchAndUpdateVotePreview, debounceDelay);
+		debounceTimeout = setTimeout(fetchPreview, debounceDelay);
 	});
+}
 
-	fetchAndUpdateVotePreview();
+document.addEventListener("DOMContentLoaded", () => {
+	const elements = getVotePreviewElements();
+	if (!elements) return;
+
+	const fetchPreview = createPreviewFetcher(elements);
+	setupVotePreviewListeners(elements, fetchPreview);
+	fetchPreview();
 });
