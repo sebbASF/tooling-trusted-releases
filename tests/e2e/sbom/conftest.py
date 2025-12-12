@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from playwright.sync_api import Page
 
 PROJECT_NAME = "test"
-VERSION_NAME = "0.1"
+VERSION_NAME = "0.1+e2e-sbom"
 FILE_NAME = "apache-test-0.2.tar.gz"
 CURRENT_DIR = pathlib.Path(__file__).parent.resolve()
 

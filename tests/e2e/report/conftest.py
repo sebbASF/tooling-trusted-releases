@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from playwright.sync_api import Browser, BrowserContext, Locator, Page
 
 PROJECT_NAME: Final[str] = "test"
-VERSION_NAME: Final[str] = "0.1+report"
+VERSION_NAME: Final[str] = "0.1+e2e-report"
 FILE_NAME: Final[str] = "apache-test-0.2.tar.gz"
 CURRENT_DIR: Final[pathlib.Path] = pathlib.Path(__file__).parent.resolve()
 REPORT_URL: Final[str] = f"/report/{PROJECT_NAME}/{VERSION_NAME}/{FILE_NAME}"
