@@ -1,7 +1,7 @@
-.PHONY: build build-alpine build-playwright build-ts build-ubuntu certs \
-  check check-extra check-light commit docs generate-version ipython \
-  manual run-alpine run-playwright run-playwright-slow serve serve-local \
-  sync sync-all update-deps
+.PHONY: build build-alpine build-bootstrap build-playwright build-ts \
+  build-ubuntu bump-bootstrap certs check check-extra check-light commit \
+  docs generate-version ipython manual run-alpine run-playwright \
+  run-playwright-slow serve serve-local sync sync-all update-deps
 
 BIND ?= 127.0.0.1:8080
 IMAGE ?= tooling-trusted-release
@@ -11,6 +11,13 @@ build: build-alpine
 build-alpine:
 	scripts/build Dockerfile.alpine $(IMAGE)
 
+build-bootstrap:
+	docker build -t atr-bootstrap bootstrap/context
+	docker run --rm \
+	  -v "$$PWD/bootstrap/source:/opt/bootstrap/source" \
+	  -v "$$PWD/atr/static:/run/bootstrap-output" \
+	  atr-bootstrap
+
 build-playwright:
 	docker build -t atr-playwright -f tests/Dockerfile.playwright playwright
 
@@ -19,6 +26,14 @@ build-ts:
 
 build-ubuntu:
 	scripts/build Dockerfile.ubuntu $(IMAGE)
+
+bump-bootstrap:
+	@test -n "$(BOOTSTRAP_VERSION)" \
+	  || { echo "usage: make bump-bootstrap BOOTSTRAP_VERSION=X.Y.Z"; exit 1; }
+	docker build -t atr-bootstrap bootstrap/context
+	docker run --rm \
+	  -v "$$PWD/bootstrap/source:/opt/bootstrap/source" \
+	  atr-bootstrap /opt/bootstrap/bump.sh $(BOOTSTRAP_VERSION)
 
 certs:
 	if test ! -f state/cert.pem || test ! -f state/key.pem; \

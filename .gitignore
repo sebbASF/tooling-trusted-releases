@@ -12,6 +12,8 @@ __pycache__/
 apptoken.txt
 atr/_version.py
 bootstrap/build/
+bootstrap/source/css/
+bootstrap/source/scss/
 dev/
 /docs/
 node_modules/
