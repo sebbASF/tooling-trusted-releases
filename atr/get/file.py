@@ -40,16 +40,15 @@ async def selected(session: web.Committer, project_name: str, version_name: str)
 
     revision_number = release.latest_revision_number
     file_stats = []
-    if revision_number is not None:
-        if release.phase == sql.ReleasePhase.RELEASE:
-            file_stats = [stat async for stat in util.content_list(util.get_finished_dir(), project_name, version_name)]
-        else:
-            file_stats = [
-                stat
-                async for stat in util.content_list(
-                    util.get_unfinished_dir(), project_name, version_name, revision_number
-                )
-            ]
+    if release.phase == sql.ReleasePhase.RELEASE:
+        file_stats = [stat async for stat in util.content_list(util.get_finished_dir(), project_name, version_name)]
+    elif revision_number is not None:
+        file_stats = [
+            stat
+            async for stat in util.content_list(util.get_unfinished_dir(), project_name, version_name, revision_number)
+        ]
+    else:
+        raise ValueError("No revision number found for unfinished release")
     file_stats.sort(key=lambda fs: fs.path)
 
     block = htm.Block()
