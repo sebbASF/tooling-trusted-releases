@@ -459,6 +459,26 @@ def to_str_list(v: Any) -> list[str]:
     raise ValueError(f"Expected a string or list of strings, got {type(v).__name__}")
 
 
+def to_url_path(v: Any) -> str | None:
+    if not v:
+        return None
+
+    url_path = str(v)
+
+    if url_path.startswith("/"):
+        raise ValueError("Absolute paths are not allowed")
+
+    segments = url_path.split("/")
+
+    if "." in segments:
+        raise ValueError("Self directory references (.) are not allowed")
+
+    if ".." in segments:
+        raise ValueError("Parent directory references (..) are not allowed")
+
+    return url_path
+
+
 # Validator types come before other functions
 # We must not use the "type" keyword here, otherwise Pydantic complains
 
@@ -519,6 +539,12 @@ StrList = Annotated[
     list[str],
     functional_validators.BeforeValidator(to_str_list),
     pydantic.Field(default_factory=list),
+]
+
+URLPath = Annotated[
+    str | None,
+    functional_validators.BeforeValidator(to_url_path),
+    pydantic.Field(default=None),
 ]
 
 

@@ -16,14 +16,19 @@
 # under the License.
 
 
+from typing import Final
+
 import quart
 
 import atr.blueprints.post as post
+import atr.db as db
 import atr.get as get
 import atr.log as log
 import atr.shared as shared
 import atr.storage as storage
 import atr.web as web
+
+_SVN_BASE_URL: Final[str] = "https://dist.apache.org/repos/dist"
 
 
 @post.committer("/upload/<project_name>/<version_name>")
@@ -69,17 +74,36 @@ async def _add_files(
         )
 
 
+def _construct_svn_url(project_name: str, area: shared.upload.SvnArea, path: str, *, is_podling: bool) -> str:
+    if is_podling:
+        return f"{_SVN_BASE_URL}/{area.value}/incubator/{project_name}/{path}"
+    return f"{_SVN_BASE_URL}/{area.value}/{project_name}/{path}"
+
+
 async def _svn_import(
     session: web.Committer, svn_form: shared.upload.SvnImportForm, project_name: str, version_name: str
 ) -> web.WerkzeugResponse:
     try:
         target_subdirectory = str(svn_form.target_subdirectory) if svn_form.target_subdirectory else None
+        svn_area = svn_form.svn_area
+        svn_path = svn_form.svn_path or ""
+
+        async with db.session() as data:
+            release = await session.release(project_name, version_name, data=data)
+            is_podling = (release.project.committee is not None) and release.project.committee.is_podling
+
+        svn_url = _construct_svn_url(
+            project_name,
+            svn_area,  # pyright: ignore[reportArgumentType]
+            svn_path,
+            is_podling=is_podling,
+        )
         async with storage.write(session) as write:
             wacp = await write.as_project_committee_participant(project_name)
             await wacp.release.import_from_svn(
                 project_name,
                 version_name,
-                str(svn_form.svn_url),
+                svn_url,
                 svn_form.revision,
                 target_subdirectory,
             )

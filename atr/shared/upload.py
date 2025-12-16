@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import enum
 from typing import Annotated, Literal
 
 import pydantic
@@ -23,6 +24,11 @@ import atr.form as form
 
 type ADD_FILES = Literal["add_files"]
 type SVN_IMPORT = Literal["svn_import"]
+
+
+class SvnArea(enum.Enum):
+    DEV = "dev"
+    RELEASE = "release"
 
 
 class AddFilesForm(form.Form):
@@ -50,10 +56,14 @@ class AddFilesForm(form.Form):
 
 class SvnImportForm(form.Form):
     variant: SVN_IMPORT = form.value(SVN_IMPORT)
-    svn_url: form.URL = form.label(
-        "SVN URL",
-        "The HTTP or HTTPS URL to the public SVN directory.",
-        widget=form.Widget.URL,
+    svn_area: form.Enum[SvnArea] = form.label(
+        "SVN area",
+        "Select whether to import from dev or release.",
+        widget=form.Widget.RADIO,
+    )
+    svn_path: form.URLPath = form.label(
+        "SVN path",
+        "Path within the project's SVN directory, e.g. 'java-library/4_0_4' or '3.1.5rc1'.",
     )
     revision: str = form.label(
         "Revision",

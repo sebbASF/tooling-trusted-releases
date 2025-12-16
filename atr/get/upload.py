@@ -71,7 +71,7 @@ async def selected(session: web.Committer, project_name: str, version_name: str)
     )
 
     block.h2(id="svn-upload")["SVN upload"]
-    block.p["Import files from a world readable Subversion repository URL into this draft."]
+    block.p["Import files from this project's ASF Subversion repository into this draft."]
     block.p[
         "The import will be processed in the background using the ",
         htm.code["svn export"],
