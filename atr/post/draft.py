@@ -128,23 +128,17 @@ async def fresh(session: web.Committer, project_name: str, version_name: str) ->
 
 
 @post.committer("/draft/hashgen/<project_name>/<version_name>/<path:file_path>")
-@post.form(shared.draft.HashGen)
-async def hashgen(
-    session: web.Committer, hashgen_form: shared.draft.HashGen, project_name: str, version_name: str, file_path: str
-) -> web.WerkzeugResponse:
-    """Generate an sha256 or sha512 hash file for a candidate draft file, creating a new revision."""
+@post.empty()
+async def hashgen(session: web.Committer, project_name: str, version_name: str, file_path: str) -> web.WerkzeugResponse:
+    """Generate an sha512 hash file for a candidate draft file, creating a new revision."""
     await session.check_access(project_name)
-
-    hash_type = hashgen_form.hash_type
-    if hash_type not in {"sha256", "sha512"}:
-        raise base.ASFQuartException(f"Invalid hash type '{hash_type}'. Supported types: sha256, sha512", errorcode=400)
 
     rel_path = pathlib.Path(file_path)
 
     try:
         async with storage.write(session) as write:
             wacp = await write.as_project_committee_participant(project_name)
-            await wacp.release.generate_hash_file(project_name, version_name, rel_path, hash_type)
+            await wacp.release.generate_hash_file(project_name, version_name, rel_path)
 
     except Exception as e:
         log.exception("Error generating hash file:")
@@ -153,7 +147,7 @@ async def hashgen(
 
     return await session.redirect(
         get.compose.selected,
-        success=f"{hash_type} file generated successfully",
+        success="SHA512 file generated successfully",
         project_name=project_name,
         version_name=version_name,
     )

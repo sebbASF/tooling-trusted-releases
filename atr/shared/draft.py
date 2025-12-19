@@ -22,5 +22,5 @@ class DeleteFileForm(form.Form):
     file_path: str = form.label("File path", widget=form.Widget.HIDDEN)
 
 
-class HashGen(form.Form):
-    hash_type: str = form.label("Hash type", widget=form.Widget.HIDDEN)
+class HashGen(form.Empty):
+    pass

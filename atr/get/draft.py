@@ -56,20 +56,11 @@ async def tools(session: web.Committer, project_name: str, version_name: str, fi
     hashgen_action = util.as_url(
         post.draft.hashgen, project_name=project_name, version_name=version_name, file_path=file_path
     )
-    sha256_form = form.render(
-        model_cls=shared.draft.HashGen,
-        action=hashgen_action,
-        submit_label="Generate SHA256",
-        submit_classes="btn-outline-secondary",
-        defaults={"hash_type": "sha256"},
-        empty=True,
-    )
     sha512_form = form.render(
         model_cls=shared.draft.HashGen,
         action=hashgen_action,
         submit_label="Generate SHA512",
         submit_classes="btn-outline-secondary",
-        defaults={"hash_type": "sha512"},
         empty=True,
     )
     sbom_form = form.render(
@@ -91,7 +82,6 @@ async def tools(session: web.Committer, project_name: str, version_name: str, fi
         file_data=file_data,
         release=release,
         format_file_size=util.format_file_size,
-        sha256_form=sha256_form,
         sha512_form=sha512_form,
         sbom_form=sbom_form,
     )
