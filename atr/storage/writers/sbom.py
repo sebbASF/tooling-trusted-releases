@@ -96,6 +96,7 @@ class CommitteeParticipant(FoundationCommitter):
             project_name=project_name,
             version_name=version_name,
             revision_number=revision_number,
+            primary_rel_path=str(rel_path),
         )
         self.__data.add(sbom_task)
         await self.__data.commit()

@@ -105,9 +105,11 @@ async def report(session: web.Committer, project: str, version: str, file_path: 
         if len(augment_tasks) > 0:
             latest_augment = augment_tasks[0]
             augment_results: list[Any] = [t.result for t in augment_tasks]
-            last_augmented_bom = max(
-                [r.bom_version for r in augment_results if r is not None and r.bom_version is not None]
-            )
+            augmented_bom_versions = [
+                r.bom_version for r in augment_results if r is not None and r.bom_version is not None
+            ]
+            if len(augmented_bom_versions) > 0:
+                last_augmented_bom = max(augmented_bom_versions)
         _augment_section(block, release, task_result, latest_augment, last_augmented_bom)
 
     _conformance_section(block, task_result)
