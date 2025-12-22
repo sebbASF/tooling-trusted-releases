@@ -35,6 +35,7 @@ def check(
         name = component.name or "unknown"
         version = component.version
         scope = component.scope
+        type = component.type
 
         if not component.licenses:
             continue
@@ -83,6 +84,7 @@ def check(
                         category=models.licenses.Category.X,
                         any_unknown=any_unknown,
                         scope=scope,
+                        component_type=type,
                     )
                 )
             elif got_warning:
@@ -94,6 +96,7 @@ def check(
                         category=models.licenses.Category.B,
                         any_unknown=False,
                         scope=scope,
+                        component_type=type,
                     )
                 )
 

@@ -220,8 +220,10 @@ async def score_tool(args: FileArgs) -> results.Results | None:
     bundle = sbom.utilities.path_to_bundle(pathlib.Path(full_path))
     version, properties = sbom.utilities.get_props_from_bundle(bundle)
     warnings, errors = sbom.conformance.ntia_2021_issues(bundle.bom)
-    # TODO: Could update the ATR version with a constant showing last change to the augment/scan tools
+    # TODO: Could update the ATR version with a constant showing last change to the augment/scan
+    #  tools so we know if it's outdated
     outdated = sbom.tool.plugin_outdated_version(bundle.bom)
+    license_warnings, license_errors = sbom.licenses.check(bundle.bom)
     vulnerabilities = sbom.osv.vulns_from_bundle(bundle)
     cli_errors = sbom.cyclonedx.validate_cli(bundle)
     return results.SBOMToolScore(
@@ -234,6 +236,8 @@ async def score_tool(args: FileArgs) -> results.Results | None:
         warnings=[w.model_dump_json() for w in warnings],
         errors=[e.model_dump_json() for e in errors],
         outdated=[o.model_dump_json() for o in outdated] if outdated else None,
+        license_warnings=[w.model_dump_json() for w in license_warnings] if license_warnings else None,
+        license_errors=[e.model_dump_json() for e in license_errors] if license_errors else None,
         vulnerabilities=[v.model_dump_json() for v in vulnerabilities],
         atr_props=properties,
         cli_errors=cli_errors,
@@ -284,7 +288,7 @@ async def _generate_cyclonedx_core(artifact_path: str, output_path: str) -> dict
         log.info(f"Using root directory: {extract_dir}")
 
         # Run syft to generate the CycloneDX SBOM
-        syft_command = ["syft", extract_dir, "-o", "cyclonedx-json", "--base-path", f"{temp_dir!s}"]
+        syft_command = ["syft", extract_dir, "-o", "cyclonedx-json", "--enrich", "all", "--base-path", f"{temp_dir!s}"]
         log.info(f"Running syft: {' '.join(syft_command)}")
 
         try:

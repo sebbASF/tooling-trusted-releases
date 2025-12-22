@@ -132,6 +132,12 @@ class SBOMToolScore(schema.Strict):
     warnings: list[str] = schema.description("Warnings from the SBOM tool")
     errors: list[str] = schema.description("Errors from the SBOM tool")
     outdated: list[str] | str | None = schema.description("Outdated tool(s) from the SBOM tool")
+    license_warnings: list[str] | None = schema.Field(
+        default=[], strict=False, description="License warnings found in the SBOM"
+    )
+    license_errors: list[str] | None = schema.Field(
+        default=[], strict=False, description="License errors found in the SBOM"
+    )
     vulnerabilities: list[str] | None = schema.Field(
         default=None, strict=False, description="Vulnerabilities found in the SBOM"
     )

@@ -113,6 +113,7 @@ async def report(session: web.Committer, project: str, version: str, file_path: 
         _augment_section(block, release, task_result, latest_augment, last_augmented_bom)
 
     _conformance_section(block, task_result)
+    _license_section(block, task_result)
 
     if task_result.vulnerabilities is not None:
         vulnerabilities = [
@@ -190,6 +191,26 @@ def _conformance_section(block: htm.Block, task_result: results.SBOMToolScore) -
     if not (warnings or errors):
         block.h2["Conformance report"]
         block.p["No NTIA 2021 minimum data field conformance warnings or errors found."]
+
+
+def _license_section(block: htm.Block, task_result: results.SBOMToolScore) -> None:
+    block.h2["Licenses"]
+    warnings = []
+    errors = []
+    if task_result.license_warnings is not None:
+        warnings = [sbom.models.licenses.Issue.model_validate(json.loads(w)) for w in task_result.license_warnings]
+    if task_result.license_errors is not None:
+        errors = [sbom.models.licenses.Issue.model_validate(json.loads(e)) for e in task_result.license_errors]
+    if warnings:
+        block.h3["Warnings"]
+        _license_table(block, warnings)
+
+    if errors:
+        block.h3["Errors"]
+        _license_table(block, errors)
+
+    if not (warnings or errors):
+        block.p["No license warnings or errors found."]
 
 
 def _report_header(
@@ -293,6 +314,24 @@ def _extract_vulnerability_severity(vuln: osv.VulnerabilityDetails) -> str:
     return "Unknown"
 
 
+def _license_table(block: htm.Block, items: list[sbom.models.licenses.Issue]) -> None:
+    warning_rows = [
+        htm.tr[
+            htm.td[
+                f"Category {category!s}"
+                if (len(components) == 0)
+                else htm.details[htm.summary[f"Category {category!s}"], htm.div[_detail_table(components)]]
+            ],
+            htm.td[str(count)],
+        ]
+        for category, count, components in _license_tally(items)
+    ]
+    block.table(".table.table-sm.table-bordered.table-striped")[
+        htm.thead[htm.tr[htm.th["License Category"], htm.th["Count"]]],
+        htm.tbody[*warning_rows],
+    ]
+
+
 def _missing_table(block: htm.Block, items: list[sbom.models.conformance.Missing]) -> None:
     warning_rows = [
         htm.tr[
@@ -331,6 +370,24 @@ def _missing_tally(items: list[sbom.models.conformance.Missing]) -> list[tuple[s
     return sorted(
         [(item, prop, count, components.get((item, prop), [])) for (item, prop), count in counts.items()],
         key=lambda kv: (kv[0], kv[1]),
+    )
+
+
+def _license_tally(
+    items: list[sbom.models.licenses.Issue],
+) -> list[tuple[sbom.models.licenses.Category, int, list[str | None]]]:
+    counts: dict[sbom.models.licenses.Category, int] = {}
+    components: dict[sbom.models.licenses.Category, list[str | None]] = {}
+    for item in items:
+        key = item.category
+        counts[key] = counts.get(key, 0) + 1
+        if key not in components:
+            components[key] = [str(item)]
+        else:
+            components[key].append(str(item))
+    return sorted(
+        [(category, count, components.get(category, [])) for category, count in counts.items()],
+        key=lambda kv: kv[0].value,
     )
 
 

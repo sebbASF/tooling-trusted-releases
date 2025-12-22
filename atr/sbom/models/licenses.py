@@ -18,6 +18,9 @@
 from __future__ import annotations
 
 import enum
+from typing import Any
+
+import pydantic
 
 from .base import Strict
 
@@ -27,11 +30,25 @@ class Category(enum.Enum):
     B = enum.auto()
     X = enum.auto()
 
+    def __str__(self):
+        return self.name
+
 
 class Issue(Strict):
     component_name: str
     component_version: str | None
+    component_type: str | None = None
     license_expression: str
     category: Category
     any_unknown: bool = False
     scope: str | None = None
+
+    @pydantic.field_validator("category", mode="before")
+    @classmethod
+    def _coerce_property(cls, value: Any) -> Category:
+        return value if isinstance(value, Category) else Category(value)
+
+    def __str__(self):
+        type_str = "Component" if self.component_type is None else self.component_type
+        version_str = f"@{self.component_version}" if self.component_version != "UNKNOWN" else ""
+        return f"{type_str} {self.component_name}{version_str} declares license {self.license_expression}"
