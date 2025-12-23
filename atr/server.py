@@ -70,11 +70,6 @@ class ApiOnlyOpenAPIProvider(quart_schema.OpenAPIProvider):
                 yield rule
 
 
-# FIXME: when running in SSL mode, you will receive these exceptions upon termination at times:
-#        ssl.SSLError: [SSL: APPLICATION_DATA_AFTER_CLOSE_NOTIFY] application data after close notify (_ssl.c:2706)
-#        related ticket: https://github.com/pgjones/hypercorn/issues/261
-#        in production, we actually do not need SSL mode as SSL termination is handled by the apache reverse proxy.
-#        the tooling-agenda app runs without SSL on agenda-test in a similar setup and it works fine.
 def main() -> None:
     """Quart debug server"""
     global app

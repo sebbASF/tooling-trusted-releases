@@ -103,13 +103,13 @@ run-playwright-slow:
 serve:
 	SSH_HOST=127.0.0.1 uv run --frozen hypercorn --bind $(BIND) \
 	  --keyfile localhost.apache.org+3-key.pem --certfile localhost.apache.org+3.pem \
-	  atr.server:app --debug --reload
+	  atr.server:app --debug --reload --worker-class uvloop
 
 serve-local:
 	APP_HOST=localhost.apache.org:8080 SECRET_KEY=insecure-local-key \
 	  ALLOW_TESTS=1 SSH_HOST=127.0.0.1 uv run --frozen hypercorn --bind $(BIND) \
 	  --keyfile localhost.apache.org+3-key.pem --certfile localhost.apache.org+3.pem \
-	  atr.server:app --debug --reload
+	  atr.server:app --debug --reload --worker-class uvloop
 
 sync:
 	uv sync --frozen --no-dev
