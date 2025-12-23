@@ -175,23 +175,6 @@ async def selected_path(session: web.Committer, project_name: str, version_name:
     )
 
 
-def _render_file_content(block: htm.Block, content: str, is_text: bool, is_truncated: bool, max_view_size: int) -> None:
-    card = htm.Block(htm.div, classes=".card.mb-4")
-    card.div(".card-header")[htm.h3(".mb-0")["File content" + (" (Hexdump)" if (not is_text) else "")]]
-
-    if is_text:
-        card.div(".card-body.p-0")[htm.pre(".bg-light.p-4.rounded-bottom.mb-0.text-break")[content]]
-    else:
-        card.div(".card-body.p-0")[htm.pre(".bg-light.p-4.rounded-bottom.mb-0.text-break")[htm.code[content]]]
-
-    if is_truncated:
-        card.div(".card-footer.text-muted.small")[
-            f"Note: File content truncated to the first {util.format_file_size(max_view_size)}."
-        ]
-
-    block.append(card.collect())
-
-
 def _get_navigation_info(release: sql.Release) -> tuple[str, str, Phase] | None:
     """Get back URL, back label, and phase label based on release phase."""
     if release.phase == sql.ReleasePhase.RELEASE_CANDIDATE_DRAFT:
@@ -226,3 +209,20 @@ def _phase_display_name(phase: sql.ReleasePhase) -> str:
     elif phase == sql.ReleasePhase.RELEASE:
         return "release"
     return "release"
+
+
+def _render_file_content(block: htm.Block, content: str, is_text: bool, is_truncated: bool, max_view_size: int) -> None:
+    card = htm.Block(htm.div, classes=".card.mb-4")
+    card.div(".card-header")[htm.h3(".mb-0")["File content" + (" (Hexdump)" if (not is_text) else "")]]
+
+    if is_text:
+        card.div(".card-body.p-0")[htm.pre(".bg-light.p-4.rounded-bottom.mb-0.text-break")[content]]
+    else:
+        card.div(".card-body.p-0")[htm.pre(".bg-light.p-4.rounded-bottom.mb-0.text-break")[htm.code[content]]]
+
+    if is_truncated:
+        card.div(".card-footer.text-muted.small")[
+            f"Note: File content truncated to the first {util.format_file_size(max_view_size)}."
+        ]
+
+    block.append(card.collect())

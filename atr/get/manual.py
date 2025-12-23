@@ -54,25 +54,6 @@ async def resolve_selected(session: web.Committer, project_name: str, version_na
     )
 
 
-def _render_resolve_page(release: sql.Release) -> htm.Element:
-    page = htm.Block()
-
-    back_url = util.as_url(vote.selected, project_name=release.project.name, version_name=release.version)
-    page.p[htm.a(".atr-back-link", href=back_url)[f"← Back to Vote for {release.short_display_name}"]]
-
-    page.h1[f"Resolve vote for {release.short_display_name}"]
-    page.p["This is a manual vote resolution."]
-
-    form.render_block(
-        page,
-        model_cls=shared.manual.ResolveVoteForm,
-        form_classes=".atr-canary.py-4.px-5.mb-4.border.rounded",
-        submit_label="Resolve vote",
-    )
-
-    return page.collect()
-
-
 @get.committer("/manual/start/<project_name>/<version_name>/<revision>")
 async def start_selected_revision(
     session: web.Committer, project_name: str, version_name: str, revision: str
@@ -150,5 +131,24 @@ async def _render_page(release, revision: str) -> htm.Element:
     )
 
     page.append(manual_form)
+
+    return page.collect()
+
+
+def _render_resolve_page(release: sql.Release) -> htm.Element:
+    page = htm.Block()
+
+    back_url = util.as_url(vote.selected, project_name=release.project.name, version_name=release.version)
+    page.p[htm.a(".atr-back-link", href=back_url)[f"← Back to Vote for {release.short_display_name}"]]
+
+    page.h1[f"Resolve vote for {release.short_display_name}"]
+    page.p["This is a manual vote resolution."]
+
+    form.render_block(
+        page,
+        model_cls=shared.manual.ResolveVoteForm,
+        form_classes=".atr-canary.py-4.px-5.mb-4.border.rounded",
+        submit_label="Resolve vote",
+    )
 
     return page.collect()

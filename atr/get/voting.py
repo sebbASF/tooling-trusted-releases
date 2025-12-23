@@ -100,6 +100,11 @@ async def _check_keys_warning(committee: sql.Committee) -> bool:
     return not await aiofiles.os.path.isfile(keys_file_path)
 
 
+def _render_body_tabs(default_body: str) -> htm.Element:
+    """Render the tabbed interface for body editing and preview."""
+    return render.body_tabs("vote-body", default_body, construct.vote_template_variables())
+
+
 async def _render_page(
     release,
     permitted_recipients: list[str],
@@ -176,8 +181,3 @@ async def _render_page(
     page.append(htpy.div("#vote-config.d-none", data_preview_url=preview_url, data_min_hours=str(min_hours)))
 
     return page.collect()
-
-
-def _render_body_tabs(default_body: str) -> htm.Element:
-    """Render the tabbed interface for body editing and preview."""
-    return render.body_tabs("vote-body", default_body, construct.vote_template_variables())

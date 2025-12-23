@@ -48,6 +48,42 @@ async def selected(session: web.Committer, project_name: str) -> str:
     )
 
 
+def _existing_releases(ul: htm.Block, releases: list[sql.Release], max_revisions: int = 18) -> None:
+    for i, release in enumerate(releases):
+        if i >= max_revisions:
+            break
+
+        phase_symbol = _get_phase_symbol(release.phase)
+        ul.li(".col-6.col-sm-4.col-md-3.col-lg-2")[
+            htm.div(".text-nowrap")[
+                htm.span(class_="atr-phase-symbol fs-6")[phase_symbol],
+                " ",
+                release.version,
+            ]
+        ]
+
+    if len(releases) > max_revisions:
+        ul.li(".col-6.col-sm-4.col-md-3.col-lg-2")[
+            htm.div(".text-center")[
+                htm.strong["..."],
+                " ",
+                htm.span(".text-muted.ms-1")[f"{len(releases) - max_revisions} more"],
+            ]
+        ]
+
+
+def _get_phase_symbol(phase: sql.ReleasePhase) -> str:
+    match phase:
+        case sql.ReleasePhase.RELEASE_CANDIDATE_DRAFT:
+            return "①"
+        case sql.ReleasePhase.RELEASE_CANDIDATE:
+            return "②"
+        case sql.ReleasePhase.RELEASE_PREVIEW:
+            return "③"
+        case sql.ReleasePhase.RELEASE:
+            return "Ⓡ"
+
+
 async def _render_page(project: sql.Project, releases: list[sql.Release]) -> htm.Element:
     page = htm.Block()
 
@@ -91,39 +127,3 @@ async def _render_page(project: sql.Project, releases: list[sql.Release]) -> htm
         ".",
     ]
     return page.collect()
-
-
-def _existing_releases(ul: htm.Block, releases: list[sql.Release], max_revisions: int = 18) -> None:
-    for i, release in enumerate(releases):
-        if i >= max_revisions:
-            break
-
-        phase_symbol = _get_phase_symbol(release.phase)
-        ul.li(".col-6.col-sm-4.col-md-3.col-lg-2")[
-            htm.div(".text-nowrap")[
-                htm.span(class_="atr-phase-symbol fs-6")[phase_symbol],
-                " ",
-                release.version,
-            ]
-        ]
-
-    if len(releases) > max_revisions:
-        ul.li(".col-6.col-sm-4.col-md-3.col-lg-2")[
-            htm.div(".text-center")[
-                htm.strong["..."],
-                " ",
-                htm.span(".text-muted.ms-1")[f"{len(releases) - max_revisions} more"],
-            ]
-        ]
-
-
-def _get_phase_symbol(phase: sql.ReleasePhase) -> str:
-    match phase:
-        case sql.ReleasePhase.RELEASE_CANDIDATE_DRAFT:
-            return "①"
-        case sql.ReleasePhase.RELEASE_CANDIDATE:
-            return "②"
-        case sql.ReleasePhase.RELEASE_PREVIEW:
-            return "③"
-        case sql.ReleasePhase.RELEASE:
-            return "Ⓡ"

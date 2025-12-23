@@ -86,6 +86,64 @@ async def selected(session: web.Committer, project_name: str, version_name: str)
     )
 
 
+def _render_body_tabs(default_body: str) -> htm.Element:
+    """Render the tabbed interface for body editing and preview."""
+    return render.body_tabs("announce-body", default_body, construct.announce_template_variables())
+
+
+def _render_download_path_field(default_value: str, description: str) -> htm.Element:
+    """Render the download path suffix field with custom help text."""
+    base_text = description.split(" plus this suffix")[0] if (" plus this suffix" in description) else description
+    return htm.div[
+        htpy.input(
+            "#download_path_suffix.form-control",
+            type="text",
+            name="download_path_suffix",
+            value=default_value,
+        ),
+        htpy.div(".form-text.text-muted.mt-2", data_base_text=base_text)[description],
+    ]
+
+
+def _render_mailing_list_with_warning(choices: list[tuple[str, str]], default_value: str) -> htm.Element:
+    """Render the mailing list radio buttons with a warning card."""
+    container = htm.Block(htm.div)
+
+    # Radio buttons
+    radio_container = htm.div(".d-flex.flex-wrap.gap-2.mb-3")
+    radio_buttons = []
+    for value, label in choices:
+        radio_id = f"mailing_list_{value}"
+        radio_attrs = {
+            "type": "radio",
+            "name": "mailing_list",
+            "value": value,
+        }
+        if value == default_value:
+            radio_attrs["checked"] = ""
+
+        radio_buttons.append(
+            htm.div(".form-check")[
+                htpy.input(f"#{radio_id}.form-check-input", **radio_attrs),
+                htpy.label(".form-check-label", for_=radio_id)[label],
+            ]
+        )
+    container.append(radio_container[radio_buttons])
+
+    # Warning card
+    warning_card = htm.div(".card.bg-warning-subtle.mb-3")[
+        htm.span(".card-body.p-3")[
+            htpy.i(".bi.bi-exclamation-triangle.me-1"),
+            htm.strong["TODO: "],
+            "The limited options above are provided for testing purposes. In the finished version of ATR, "
+            "you will be able to send to your own specified mailing lists.",
+        ]
+    ]
+    container.append(warning_card)
+
+    return container.collect()
+
+
 async def _render_page(
     release: sql.Release,
     mailing_list_choices: list[tuple[str, str]],
@@ -172,61 +230,3 @@ def _render_release_card(release: sql.Release) -> htm.Element:
         ],
     ]
     return card
-
-
-def _render_body_tabs(default_body: str) -> htm.Element:
-    """Render the tabbed interface for body editing and preview."""
-    return render.body_tabs("announce-body", default_body, construct.announce_template_variables())
-
-
-def _render_mailing_list_with_warning(choices: list[tuple[str, str]], default_value: str) -> htm.Element:
-    """Render the mailing list radio buttons with a warning card."""
-    container = htm.Block(htm.div)
-
-    # Radio buttons
-    radio_container = htm.div(".d-flex.flex-wrap.gap-2.mb-3")
-    radio_buttons = []
-    for value, label in choices:
-        radio_id = f"mailing_list_{value}"
-        radio_attrs = {
-            "type": "radio",
-            "name": "mailing_list",
-            "value": value,
-        }
-        if value == default_value:
-            radio_attrs["checked"] = ""
-
-        radio_buttons.append(
-            htm.div(".form-check")[
-                htpy.input(f"#{radio_id}.form-check-input", **radio_attrs),
-                htpy.label(".form-check-label", for_=radio_id)[label],
-            ]
-        )
-    container.append(radio_container[radio_buttons])
-
-    # Warning card
-    warning_card = htm.div(".card.bg-warning-subtle.mb-3")[
-        htm.span(".card-body.p-3")[
-            htpy.i(".bi.bi-exclamation-triangle.me-1"),
-            htm.strong["TODO: "],
-            "The limited options above are provided for testing purposes. In the finished version of ATR, "
-            "you will be able to send to your own specified mailing lists.",
-        ]
-    ]
-    container.append(warning_card)
-
-    return container.collect()
-
-
-def _render_download_path_field(default_value: str, description: str) -> htm.Element:
-    """Render the download path suffix field with custom help text."""
-    base_text = description.split(" plus this suffix")[0] if (" plus this suffix" in description) else description
-    return htm.div[
-        htpy.input(
-            "#download_path_suffix.form-control",
-            type="text",
-            name="download_path_suffix",
-            value=default_value,
-        ),
-        htpy.div(".form-text.text-muted.mt-2", data_base_text=base_text)[description],
-    ]

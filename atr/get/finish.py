@@ -344,6 +344,16 @@ async def _render_page(
     )
 
 
+def _render_rc_preview_table(affected_paths: list[tuple[str, str]]) -> htm.Element:
+    """Render the RC tags preview table."""
+    rows = [htm.tr[htm.td[original], htm.td[stripped]] for original, stripped in affected_paths]
+
+    return htm.div[
+        htm.p(".mb-2")["Preview of changes:"],
+        htm.table(".table.table-sm.table-striped.border.mt-3")[htm.tbody[rows]],
+    ]
+
+
 def _render_rc_tags_section(rc_analysis: RCTagAnalysisResult) -> htm.Element:
     """Render the remove RC tags section."""
     section = htm.Block()
@@ -369,16 +379,6 @@ def _render_rc_tags_section(rc_analysis: RCTagAnalysisResult) -> htm.Element:
         section.p["No paths with RC tags found to remove."]
 
     return section.collect()
-
-
-def _render_rc_preview_table(affected_paths: list[tuple[str, str]]) -> htm.Element:
-    """Render the RC tags preview table."""
-    rows = [htm.tr[htm.td[original], htm.td[stripped]] for original, stripped in affected_paths]
-
-    return htm.div[
-        htm.p(".mb-2")["Preview of changes:"],
-        htm.table(".table.table-sm.table-striped.border.mt-3")[htm.tbody[rows]],
-    ]
 
 
 def _render_release_card(release: sql.Release) -> htm.Element:

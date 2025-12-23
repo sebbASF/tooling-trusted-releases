@@ -139,17 +139,17 @@ async def index(session: web.Committer | None) -> quart_response.Response | str:
     return await template.render("index-public.html")
 
 
+@get.public("/policies")
+async def policies(session: web.Committer | None) -> str:
+    return await template.blank("Policies", content=_POLICIES)
+
+
 @get.public("/miscellaneous/resolved.json")
 async def resolved_json(session: web.Committer | None) -> quart_response.Response:
     json_path = pathlib.Path(config.get().PROJECT_ROOT) / "atr" / "static" / "json" / "resolved.json"
     async with aiofiles.open(json_path) as f:
         content = await f.read()
     return quart_response.Response(content, mimetype="application/json")
-
-
-@get.public("/policies")
-async def policies(session: web.Committer | None) -> str:
-    return await template.blank("Policies", content=_POLICIES)
 
 
 @get.committer("/tutorial")
