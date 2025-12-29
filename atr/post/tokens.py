@@ -64,7 +64,7 @@ async def _add_token(session: web.Committer, add_form: shared.tokens.AddTokenFor
             token_hash,
             created,
             expires,
-            add_form.label or None,
+            add_form.label,
         )
 
     await web.flash_success(

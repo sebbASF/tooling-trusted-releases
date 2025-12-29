@@ -31,7 +31,10 @@ class AddTokenForm(form.Form):
 
     @pydantic.field_validator("label", mode="after")
     @classmethod
-    def validate_label_length(cls, value: str) -> str:
+    def validate_label(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Label is required")
         if len(value) > 100:
             raise ValueError("Label must be 100 characters or less")
         return value
