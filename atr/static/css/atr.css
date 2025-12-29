@@ -124,7 +124,7 @@ footer {
 }
 
 h1 {
-    margin-top: 1.5rem;
+    margin-top: 0;
     margin-bottom: 1.5rem;
     line-height: 1.35;
 }
@@ -369,6 +369,7 @@ span.warning {
 .main-content {
     flex: 1;
     padding: 1rem 3rem;
+    margin-top: 1.5rem;
 }
 
 .nav-toggle {
