@@ -159,6 +159,12 @@ pre {
     border: 1px solid #d1d2d3;
 }
 
+td pre {
+    margin-bottom: 0;
+    padding: 0;
+    border: none;
+}
+
 p code, li code { color: #aa0033; }
 
 a:has(code) {
