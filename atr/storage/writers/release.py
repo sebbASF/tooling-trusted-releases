@@ -337,7 +337,7 @@ class CommitteeParticipant(FoundationCommitter):
         creation_error = str(creating.failed) if (creating.failed is not None) else None
         return creation_error, renamed_count, error_messages
 
-    async def start(self, project_name: str, version: str) -> tuple[sql.Release, sql.Project]:
+    async def start(self, project_name: str, version: str) -> tuple[sql.Release, sql.Project]:  # noqa: C901
         """Creates the initial release draft record and revision directory."""
         # Get the project from the project name
         project = await self.__data.project(name=project_name, status=sql.ProjectStatus.ACTIVE, _committee=True).get()
@@ -368,12 +368,16 @@ class CommitteeParticipant(FoundationCommitter):
         # TODO: Consider using Release.revision instead of ./latest
         # Check whether the release already exists
         if release := await self.__data.release(project_name=project.name, version=version).get():
-            if release.phase == sql.ReleasePhase.RELEASE_CANDIDATE_DRAFT:
-                raise storage.AccessError(f"A draft for {project_name} {version} already exists.")
-            else:
-                raise storage.AccessError(
-                    f"A release ({release.phase.value}) for {project_name} {version} already exists."
-                )
+            match release.phase:
+                case sql.ReleasePhase.RELEASE_CANDIDATE_DRAFT:
+                    phase_desc = "A draft release (being composed)"
+                case sql.ReleasePhase.RELEASE_CANDIDATE:
+                    phase_desc = "A release candidate (being voted on)"
+                case sql.ReleasePhase.RELEASE_PREVIEW:
+                    phase_desc = "A release preview (being finished)"
+                case sql.ReleasePhase.RELEASE:
+                    phase_desc = "A finished release"
+            raise storage.AccessError(f"{phase_desc} for {project_name} {version} already exists.")
 
         # Validate the version name
         # TODO: We should check that it's bigger than the current version
