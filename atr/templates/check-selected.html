@@ -108,9 +108,9 @@
       <h5 class="mb-0">
         Files
         {% if phase == "release_candidate_draft" %}
-          in this revision
+          in revision {{ revision_number }}
         {% else %}
-          in the release candidate
+          in the release candidate (revision {{ revision_number }})
         {% endif %}
       </h5>
     </div>
