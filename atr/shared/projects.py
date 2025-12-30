@@ -23,6 +23,7 @@ from typing import Annotated, Literal
 import pydantic
 
 import atr.form as form
+import atr.models.sql as sql
 import atr.util as util
 
 type COMPOSE = Literal["compose"]
@@ -109,6 +110,11 @@ class ComposePolicyForm(form.Form):
         "Source artifact paths",
         "Paths to source artifacts to be included in the release.",
         widget=form.Widget.TEXTAREA,
+    )
+    license_check_mode: form.Enum[sql.LicenseCheckMode] = form.label(
+        "License check mode",
+        "Choose which license checks to run on source artifacts. Lightweight checks always run on binary artifacts.",
+        widget=form.Widget.RADIO,
     )
     binary_artifact_paths: str = form.label(
         "Binary artifact paths",

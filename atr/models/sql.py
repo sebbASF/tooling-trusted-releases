@@ -139,6 +139,12 @@ class DistributionPlatform(enum.Enum):
     )
 
 
+class LicenseCheckMode(str, enum.Enum):
+    BOTH = "Both"
+    LIGHTWEIGHT = "Lightweight"
+    RAT = "RAT"
+
+
 class ProjectStatus(str, enum.Enum):
     ACTIVE = "active"
     DORMANT = "dormant"
@@ -655,6 +661,12 @@ Thanks,
         return policy.source_artifact_paths or []
 
     @property
+    def policy_license_check_mode(self) -> LicenseCheckMode:
+        if (policy := self.release_policy) is None:
+            return LicenseCheckMode.BOTH
+        return policy.license_check_mode
+
+    @property
     def policy_strict_checking(self) -> bool:
         # This is bool, so it should never be None
         # TODO: Should we make it nullable for defaulting?
@@ -997,6 +1009,7 @@ class ReleasePolicy(sqlmodel.SQLModel, table=True):
     source_artifact_paths: list[str] = sqlmodel.Field(
         default_factory=list, sa_column=sqlalchemy.Column(sqlalchemy.JSON)
     )
+    license_check_mode: LicenseCheckMode = sqlmodel.Field(default=LicenseCheckMode.BOTH)
     strict_checking: bool = sqlmodel.Field(default=False)
     github_repository_name: str = sqlmodel.Field(default="")
     github_compose_workflow_path: list[str] = sqlmodel.Field(

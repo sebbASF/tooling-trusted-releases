@@ -27,6 +27,7 @@ import atr.archives as archives
 import atr.config as config
 import atr.log as log
 import atr.models.results as results
+import atr.models.sql as sql
 import atr.tasks.checks as checks
 import atr.util as util
 
@@ -51,6 +52,11 @@ async def check(args: checks.FunctionArguments) -> results.Results | None:
         return None
     if await recorder.primary_path_is_binary():
         log.info(f"Skipping RAT check for binary artifact {artifact_abs_path} (rel: {args.primary_rel_path})")
+        return None
+
+    project = await recorder.project()
+    if project.policy_license_check_mode == sql.LicenseCheckMode.LIGHTWEIGHT:
+        log.info(f"Skipping RAT check for {artifact_abs_path} (mode is LIGHTWEIGHT)")
         return None
 
     if await recorder.check_cache(artifact_abs_path):

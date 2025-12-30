@@ -127,8 +127,12 @@ async def files(args: checks.FunctionArguments) -> results.Results | None:
     recorder = await args.recorder()
     if not (artifact_abs_path := await recorder.abs_path()):
         return None
-    if await recorder.primary_path_is_binary():
-        return None
+
+    is_binary = await recorder.primary_path_is_binary()
+    if not is_binary:
+        project = await recorder.project()
+        if project.policy_license_check_mode == sql.LicenseCheckMode.RAT:
+            return None
 
     log.info(f"Checking license files for {artifact_abs_path} (rel: {args.primary_rel_path})")
 
@@ -155,8 +159,12 @@ async def headers(args: checks.FunctionArguments) -> results.Results | None:
     recorder = await args.recorder()
     if not (artifact_abs_path := await recorder.abs_path()):
         return None
-    if await recorder.primary_path_is_binary():
-        return None
+
+    is_binary = await recorder.primary_path_is_binary()
+    if not is_binary:
+        project = await recorder.project()
+        if project.policy_license_check_mode == sql.LicenseCheckMode.RAT:
+            return None
 
     if await recorder.check_cache(artifact_abs_path):
         log.info(f"Using cached license headers result for {artifact_abs_path} (rel: {args.primary_rel_path})")
