@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING
 import aiofiles.os
 import aioshutil
 
+import atr.attestable as attestable
 import atr.db as db
 import atr.db.interaction as interaction
 import atr.detection as detection
@@ -195,6 +196,11 @@ class CommitteeParticipant(FoundationCommitter):
             except Exception:
                 await aioshutil.rmtree(temp_dir)
                 raise
+
+            parent_revision_number = old_revision.number if old_revision else None
+            await attestable.write(
+                new_revision_dir, project_name, version_name, new_revision.number, asf_uid, parent_revision_number
+            )
 
             # Commit to end the transaction started by data.begin_immediate
             # We must commit the revision before starting the checks

@@ -183,6 +183,22 @@ async def async_temporary_directory(
             log.exception(f"Failed to remove temporary directory {temp_dir_path}")
 
 
+async def atomic_write_file(file_path: pathlib.Path, content: str, encoding: str = "utf-8") -> None:
+    """Atomically write content to a file using a temporary file."""
+    await aiofiles.os.makedirs(file_path.parent, exist_ok=True)
+    temp_path = file_path.parent / f".{file_path.name}.{uuid.uuid4()}.tmp"
+    try:
+        async with aiofiles.open(temp_path, "w", encoding=encoding) as f:
+            await f.write(content)
+            await f.flush()
+            await asyncio.to_thread(os.fsync, f.fileno())
+        await aiofiles.os.rename(temp_path, file_path)
+    except Exception:
+        with contextlib.suppress(FileNotFoundError):
+            await aiofiles.os.remove(temp_path)
+        raise
+
+
 def chmod_directories(path: pathlib.Path, permissions: int = 0o755) -> None:
     # codeql[py/overly-permissive-file]
     os.chmod(path, permissions)
@@ -433,6 +449,10 @@ async def get_asf_id_or_die() -> str:
     if (web_session is None) or (web_session.uid is None):
         raise base.ASFQuartException("Not authenticated", errorcode=401)
     return web_session.uid
+
+
+def get_attestable_dir() -> pathlib.Path:
+    return pathlib.Path(config.get().ATTESTABLE_STORAGE_DIR)
 
 
 def get_downloads_dir() -> pathlib.Path:
@@ -818,26 +838,7 @@ async def session_cache_read() -> dict[str, dict]:
 
 async def session_cache_write(cache_data: dict[str, dict]) -> None:
     cache_path = pathlib.Path(config.get().STATE_DIR) / "user_session_cache.json"
-
-    cache_dir = cache_path.parent
-    await asyncio.to_thread(os.makedirs, cache_dir, exist_ok=True)
-
-    # Use the same pattern as update_atomic_symlink for the temporary file name
-    temp_path = cache_dir / f".{cache_path.name}.{uuid.uuid4()}.tmp"
-
-    try:
-        async with aiofiles.open(temp_path, "w") as f:
-            await f.write(json.dumps(cache_data, indent=2))
-            await f.flush()
-            await asyncio.to_thread(os.fsync, f.fileno())
-
-        await aiofiles.os.rename(temp_path, cache_path)
-    except Exception:
-        try:
-            await aiofiles.os.remove(temp_path)
-        except FileNotFoundError:
-            pass
-        raise
+    await atomic_write_file(cache_path, json.dumps(cache_data, indent=2))
 
 
 def static_path(*args: str) -> str:
