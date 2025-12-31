@@ -174,19 +174,28 @@ class CommitteeParticipant(FoundationCommitter):
         vote_end = vote_start + datetime.timedelta(hours=vote_duration_choice)
         vote_end_str = vote_end.strftime("%Y-%m-%d %H:%M:%S UTC")
 
-        # Perform template substitutions in the body before passing to task
-        # This must be done here and not in the task because we need util.as_url
-        body_substituted = await construct.start_vote_body(
-            body_data,
-            construct.StartVoteOptions(
-                asfuid=asf_uid,
-                fullname=asf_fullname,
-                project_name=project_name,
-                version_name=version_name,
-                vote_duration=vote_duration_choice,
-                vote_end=vote_end_str,
-            ),
+        options = construct.StartVoteOptions(
+            asfuid=asf_uid,
+            fullname=asf_fullname,
+            project_name=project_name,
+            version_name=version_name,
+            vote_duration=vote_duration_choice,
+            vote_end=vote_end_str,
         )
+
+        # Get revision tag for subject substitution
+        revision_obj = await self.__data.revision(release_name=release.name, number=selected_revision_number).get()
+        revision_tag = revision_obj.tag if (revision_obj and revision_obj.tag) else ""
+
+        # Get committee name for subject substitution
+        committee_name = release.committee.display_name if release.committee else ""
+
+        # Perform template substitutions before passing to task
+        # This must be done here and not in the task because we need util.as_url
+        subject_substituted = construct.start_vote_subject(
+            subject_data, options, selected_revision_number, revision_tag, committee_name
+        )
+        body_substituted = await construct.start_vote_body(body_data, options)
 
         # Create a task for vote initiation
         task = sql.Task(
@@ -198,7 +207,7 @@ class CommitteeParticipant(FoundationCommitter):
                 vote_duration=vote_duration_choice,
                 initiator_id=asf_uid,
                 initiator_fullname=asf_fullname,
-                subject=subject_data,
+                subject=subject_substituted,
                 body=body_substituted,
             ).model_dump(),
             asf_uid=asf_uid,
@@ -349,7 +358,7 @@ class CommitteeMember(CommitteeParticipant):
                 asf_uid=self.__asf_uid,
                 asf_fullname=asf_fullname,
                 vote_duration_choice=latest_vote_task.task_args["vote_duration"],
-                subject_data=f"[VOTE] Release {release.project.display_name} {release.version}",
+                subject_data=await construct.start_vote_subject_default(release.project.name),
                 body_data=await construct.start_vote_default(release.project.name),
                 release=release,
                 promote=False,

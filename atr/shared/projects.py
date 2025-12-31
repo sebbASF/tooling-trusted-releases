@@ -191,6 +191,10 @@ class VotePolicyForm(form.Form):
         "Plain text template for vote comments. Voters can edit before submitting.",
         widget=form.Widget.TEXTAREA,
     )
+    start_vote_subject: str = form.label(
+        "Start vote subject",
+        widget=form.Widget.CUSTOM,
+    )
     start_vote_template: str = form.label(
         "Start vote template",
         widget=form.Widget.CUSTOM,
@@ -220,6 +224,10 @@ class FinishPolicyForm(form.Form):
         "GitHub finish workflow paths",
         "The full paths to the GitHub workflows to use for the release, including the .github/workflows/ prefix.",
         widget=form.Widget.TEXTAREA,
+    )
+    announce_release_subject: str = form.label(
+        "Announce release subject",
+        widget=form.Widget.CUSTOM,
     )
     announce_release_template: str = form.label(
         "Announce release template",

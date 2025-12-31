@@ -43,13 +43,18 @@ async def selected(session: web.Committer, project_name: str, version_name: str)
         project_name, version_name, with_committee=True, phase=sql.ReleasePhase.RELEASE_PREVIEW
     )
 
-    # Variables used in defaults for subject and body
-    project_display_name = release.project.display_name or release.project.name
-
-    # The subject cannot be changed by the user
-    default_subject = f"[ANNOUNCE] {project_display_name} {version_name} released"
-    # The body can be changed, either from VoteTemplate or from the form
+    # Get the templates from the release policy
+    default_subject_template = await construct.announce_release_subject_default(project_name)
     default_body = await construct.announce_release_default(project_name)
+
+    # Expand the subject template
+    options = construct.AnnounceReleaseOptions(
+        asfuid=session.uid,
+        fullname=session.fullname,
+        project_name=release.project.display_name or project_name,
+        version_name=version_name,
+    )
+    default_subject = construct.announce_release_subject(default_subject_template, options)
 
     # The download path suffix can be changed
     # The defaults depend on whether the project is top level or not

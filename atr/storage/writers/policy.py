@@ -109,6 +109,7 @@ class CommitteeMember(CommitteeParticipant):
         project, release_policy = await self.__get_or_create_policy(project_name)
 
         release_policy.github_finish_workflow_path = _split_lines(form.github_finish_workflow_path)
+        self.__set_announce_release_subject(form.announce_release_subject or "", project, release_policy)
         self.__set_announce_release_template(form.announce_release_template or "", project, release_policy)
         release_policy.preserve_download_files = form.preserve_download_files
 
@@ -127,6 +128,7 @@ class CommitteeMember(CommitteeParticipant):
             release_policy.pause_for_rm = form.pause_for_rm
             release_policy.release_checklist = form.release_checklist or ""
             release_policy.vote_comment_template = form.vote_comment_template or ""
+            self.__set_start_vote_subject(form.start_vote_subject or "", project, release_policy)
             self.__set_start_vote_template(form.start_vote_template or "", project, release_policy)
         elif project.committee and project.committee.is_podling:
             raise storage.AccessError("Manual voting is not allowed for podlings.")
@@ -152,6 +154,22 @@ class CommitteeMember(CommitteeParticipant):
             self.__data.add(release_policy)
 
         return project, release_policy
+
+    def __set_announce_release_subject(
+        self,
+        submitted_subject: str,
+        project: models.sql.Project,
+        release_policy: models.sql.ReleasePolicy,
+    ) -> None:
+        submitted_subject = submitted_subject.strip()
+        current_default_text = project.policy_announce_release_subject_default
+        current_default_hash = util.compute_sha3_256(current_default_text.encode())
+        submitted_hash = util.compute_sha3_256(submitted_subject.encode())
+
+        if submitted_hash == current_default_hash:
+            release_policy.announce_release_subject = ""
+        else:
+            release_policy.announce_release_subject = submitted_subject
 
     def __set_announce_release_template(
         self,
@@ -181,6 +199,22 @@ class CommitteeMember(CommitteeParticipant):
             release_policy.min_hours = None
         else:
             release_policy.min_hours = submitted_min_hours
+
+    def __set_start_vote_subject(
+        self,
+        submitted_subject: str,
+        project: models.sql.Project,
+        release_policy: models.sql.ReleasePolicy,
+    ) -> None:
+        submitted_subject = submitted_subject.strip()
+        current_default_text = project.policy_start_vote_subject_default
+        current_default_hash = util.compute_sha3_256(current_default_text.encode())
+        submitted_hash = util.compute_sha3_256(submitted_subject.encode())
+
+        if submitted_hash == current_default_hash:
+            release_policy.start_vote_subject = ""
+        else:
+            release_policy.start_vote_subject = submitted_subject
 
     def __set_start_vote_template(
         self,

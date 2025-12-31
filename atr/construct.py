@@ -27,20 +27,20 @@ import atr.db.interaction as interaction
 import atr.models.sql as sql
 import atr.util as util
 
-type Context = Literal["announce", "checklist", "vote"]
+type Context = Literal["announce", "announce_subject", "checklist", "vote", "vote_subject"]
 
 TEMPLATE_VARIABLES: list[tuple[str, str, set[Context]]] = [
     ("CHECKLIST_URL", "URL to the release checklist", {"vote"}),
-    ("COMMITTEE", "Committee display name", {"announce", "checklist", "vote"}),
+    ("COMMITTEE", "Committee display name", {"announce", "checklist", "vote", "vote_subject"}),
     ("DOWNLOAD_URL", "URL to download the release", {"announce"}),
     ("DURATION", "Vote duration in hours", {"vote"}),
     ("KEYS_FILE", "URL to the KEYS file", {"vote"}),
-    ("PROJECT", "Project display name", {"announce", "checklist", "vote"}),
+    ("PROJECT", "Project display name", {"announce", "announce_subject", "checklist", "vote", "vote_subject"}),
     ("RELEASE_CHECKLIST", "Release checklist content", {"vote"}),
     ("REVIEW_URL", "URL to review the release", {"checklist", "vote"}),
-    ("REVISION", "Revision number", {"announce", "checklist", "vote"}),
-    ("TAG", "Revision tag, if set", {"announce", "checklist", "vote"}),
-    ("VERSION", "Version name", {"announce", "checklist", "vote"}),
+    ("REVISION", "Revision number", {"announce", "checklist", "vote", "vote_subject"}),
+    ("TAG", "Revision tag, if set", {"announce", "checklist", "vote", "vote_subject"}),
+    ("VERSION", "Version name", {"announce", "announce_subject", "checklist", "vote", "vote_subject"}),
     ("VOTE_ENDS_UTC", "Vote end date and time in UTC", {"vote"}),
     ("YOUR_ASF_ID", "Your Apache UID", {"announce", "vote"}),
     ("YOUR_FULL_NAME", "Your full name", {"announce", "vote"}),
@@ -118,6 +118,26 @@ async def announce_release_default(project_name: str) -> str:
         )
 
     return project.policy_announce_release_template
+
+
+def announce_release_subject(subject: str, options: AnnounceReleaseOptions) -> str:
+    subject = subject.replace("{{PROJECT}}", options.project_name)
+    subject = subject.replace("{{VERSION}}", options.version_name)
+
+    return subject
+
+
+async def announce_release_subject_default(project_name: str) -> str:
+    async with db.session() as data:
+        project = await data.project(name=project_name, status=sql.ProjectStatus.ACTIVE, _release_policy=True).demand(
+            RuntimeError(f"Project {project_name} not found")
+        )
+
+    return project.policy_announce_release_subject
+
+
+def announce_subject_template_variables() -> list[tuple[str, str]]:
+    return [(name, desc) for (name, desc, contexts) in TEMPLATE_VARIABLES if "announce_subject" in contexts]
 
 
 def announce_template_variables() -> list[tuple[str, str]]:
@@ -242,6 +262,35 @@ async def start_vote_default(project_name: str) -> str:
         )
 
     return project.policy_start_vote_template
+
+
+def start_vote_subject(
+    subject: str,
+    options: StartVoteOptions,
+    revision_number: str,
+    revision_tag: str,
+    committee_name: str,
+) -> str:
+    subject = subject.replace("{{COMMITTEE}}", committee_name)
+    subject = subject.replace("{{PROJECT}}", options.project_name)
+    subject = subject.replace("{{REVISION}}", revision_number)
+    subject = subject.replace("{{TAG}}", revision_tag)
+    subject = subject.replace("{{VERSION}}", options.version_name)
+
+    return subject
+
+
+async def start_vote_subject_default(project_name: str) -> str:
+    async with db.session() as data:
+        project = await data.project(name=project_name, status=sql.ProjectStatus.ACTIVE, _release_policy=True).demand(
+            RuntimeError(f"Project {project_name} not found")
+        )
+
+    return project.policy_start_vote_subject
+
+
+def vote_subject_template_variables() -> list[tuple[str, str]]:
+    return [(name, desc) for (name, desc, contexts) in TEMPLATE_VARIABLES if "vote_subject" in contexts]
 
 
 def vote_template_variables() -> list[tuple[str, str]]:

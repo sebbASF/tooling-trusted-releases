@@ -215,6 +215,59 @@ async def view(session: web.Committer, name: str) -> web.WerkzeugResponse | str:
     )
 
 
+def _input_with_variables(
+    field_name: str,
+    default_value: str,
+    template_variables: list[tuple[str, str]],
+    documentation: str | None = None,
+) -> htm.Element:
+    text_input = htpy.input(
+        f"#{field_name}.form-control.font-monospace",
+        type="text",
+        name=field_name,
+        value=default_value,
+    )
+
+    variable_rows = []
+    for name, description in template_variables:
+        variable_rows.append(
+            htm.tr[
+                htm.td(".font-monospace.text-nowrap.py-1")[f"{{{{{name}}}}}"],
+                htm.td(".py-1")[description],
+                htm.td(".text-end.py-1")[
+                    htpy.button(
+                        ".btn.btn-sm.btn-outline-secondary.copy-var-btn",
+                        type="button",
+                        data_variable=f"{{{{{name}}}}}",
+                    )["Copy"]
+                ],
+            ]
+        )
+
+    variables_table = htm.table(".table.table-sm.mb-0")[
+        htm.thead[
+            htm.tr[
+                htm.th(".py-1")["Variable"],
+                htm.th(".py-1")["Description"],
+                htm.th(".py-1")[""],
+            ]
+        ],
+        htm.tbody[*variable_rows],
+    ]
+
+    details = htm.details(".mt-2")[
+        htm.summary(".text-muted")["Available template variables"],
+        htm.div(".mt-2")[variables_table],
+    ]
+
+    elements: list[htm.Element | htm.VoidElement] = [text_input]
+    if documentation:
+        elements.append(htm.div(".text-muted.mt-1.form-text")[documentation])
+    elements.append(details)
+
+    return htm.div[elements]
+
+
 def _render_categories_section(project: sql.Project) -> htm.Element:
     card = htm.Block(htm.div, classes=".card.mb-4")
     card.div(".card-header.bg-light")[htm.h3(".mb-2")["Categories"]]
@@ -322,6 +375,13 @@ def _render_finish_form(project: sql.Project) -> htm.Element:
         htm.h3(".mb-0")["Release policy - Finish options"]
     ]
 
+    announce_release_subject_widget = _input_with_variables(
+        field_name="announce_release_subject",
+        default_value=project.policy_announce_release_subject or "",
+        template_variables=construct.announce_subject_template_variables(),
+        documentation="Subject line template for announcement emails.",
+    )
+
     announce_release_template_widget = _textarea_with_variables(
         field_name="announce_release_template",
         default_value=project.policy_announce_release_template or "",
@@ -339,6 +399,7 @@ def _render_finish_form(project: sql.Project) -> htm.Element:
             defaults={
                 "project_name": project.name,
                 "github_finish_workflow_path": "\n".join(project.policy_github_finish_workflow_path),
+                "announce_release_subject": project.policy_announce_release_subject or "",
                 "announce_release_template": project.policy_announce_release_template or "",
                 "preserve_download_files": project.policy_preserve_download_files,
             },
@@ -346,7 +407,10 @@ def _render_finish_form(project: sql.Project) -> htm.Element:
             border=True,
             # wider_widgets=True,
             textarea_rows=10,
-            custom={"announce_release_template": announce_release_template_widget},
+            custom={
+                "announce_release_subject": announce_release_subject_widget,
+                "announce_release_template": announce_release_template_widget,
+            },
         )
     return card.collect()
 
@@ -539,6 +603,7 @@ def _render_vote_form(project: sql.Project) -> htm.Element:
         "pause_for_rm": project.policy_pause_for_rm,
         "release_checklist": project.policy_release_checklist or "",
         "vote_comment_template": project.policy_vote_comment_template or "",
+        "start_vote_subject": project.policy_start_vote_subject or "",
         "start_vote_template": project.policy_start_vote_template or "",
     }
 
@@ -550,6 +615,13 @@ def _render_vote_form(project: sql.Project) -> htm.Element:
         template_variables=construct.checklist_template_variables(),
         rows=10,
         documentation="Markdown text describing how to test release candidates.",
+    )
+
+    start_vote_subject_widget = _input_with_variables(
+        field_name="start_vote_subject",
+        default_value=project.policy_start_vote_subject or "",
+        template_variables=construct.vote_subject_template_variables(),
+        documentation="Subject line template for vote emails.",
     )
 
     start_vote_template_widget = _textarea_with_variables(
@@ -574,6 +646,7 @@ def _render_vote_form(project: sql.Project) -> htm.Element:
             skip=skip_fields,
             custom={
                 "release_checklist": release_checklist_widget,
+                "start_vote_subject": start_vote_subject_widget,
                 "start_vote_template": start_vote_template_widget,
             },
         )

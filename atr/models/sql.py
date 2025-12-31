@@ -556,6 +556,10 @@ On behalf of the Apache {{COMMITTEE}} project team,
 """
 
     @property
+    def policy_announce_release_subject_default(self) -> str:
+        return "[ANNOUNCE] {{PROJECT}} {{VERSION}} released"
+
+    @property
     def policy_start_vote_default(self) -> str:
         return """Hello {{COMMITTEE}},
 
@@ -588,8 +592,18 @@ Thanks,
 """
 
     @property
+    def policy_start_vote_subject_default(self) -> str:
+        return "[VOTE] Release {{PROJECT}} {{VERSION}}"
+
+    @property
     def policy_default_min_hours(self) -> int:
         return 72
+
+    @property
+    def policy_announce_release_subject(self) -> str:
+        if ((policy := self.release_policy) is None) or (policy.announce_release_subject == ""):
+            return self.policy_announce_release_subject_default
+        return policy.announce_release_subject
 
     @property
     def policy_announce_release_template(self) -> str:
@@ -637,6 +651,12 @@ Thanks,
         if ((policy := self.release_policy) is None) or (policy.vote_comment_template == ""):
             return ""
         return policy.vote_comment_template
+
+    @property
+    def policy_start_vote_subject(self) -> str:
+        if ((policy := self.release_policy) is None) or (policy.start_vote_subject == ""):
+            return self.policy_start_vote_subject_default
+        return policy.start_vote_subject
 
     @property
     def policy_start_vote_template(self) -> str:
@@ -1001,7 +1021,9 @@ class ReleasePolicy(sqlmodel.SQLModel, table=True):
     release_checklist: str = sqlmodel.Field(default="")
     vote_comment_template: str = sqlmodel.Field(default="")
     pause_for_rm: bool = sqlmodel.Field(default=False)
+    start_vote_subject: str = sqlmodel.Field(default="")
     start_vote_template: str = sqlmodel.Field(default="")
+    announce_release_subject: str = sqlmodel.Field(default="")
     announce_release_template: str = sqlmodel.Field(default="")
     binary_artifact_paths: list[str] = sqlmodel.Field(
         default_factory=list, sa_column=sqlalchemy.Column(sqlalchemy.JSON)

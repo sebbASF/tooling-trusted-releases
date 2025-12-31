@@ -64,14 +64,23 @@ async def selected_revision(
             min_hours = release.release_policy.min_hours
 
         revision_obj = await data.revision(release_name=release.name, number=revision).get()
-        if revision_obj and revision_obj.tag:
-            subject_suffix = f" ({revision_obj.tag})"
-        else:
-            subject_suffix = f" (revision {revision})"
+        revision_number = str(revision)
+        revision_tag = revision_obj.tag if (revision_obj and revision_obj.tag) else ""
 
-        # TODO: Add the draft revision number or tag to the subject
-        default_subject = f"[VOTE] Release {release.project.display_name} {release.version}{subject_suffix}"
+        default_subject_template = await construct.start_vote_subject_default(project_name)
         default_body = await construct.start_vote_default(project_name)
+
+        options = construct.StartVoteOptions(
+            asfuid=session.uid,
+            fullname=session.fullname,
+            project_name=release.project.display_name or project_name,
+            version_name=release.version,
+            vote_duration=min_hours,
+            vote_end="",
+        )
+        default_subject = construct.start_vote_subject(
+            default_subject_template, options, revision_number, revision_tag, committee.display_name
+        )
 
         keys_warning = await _check_keys_warning(committee)
 
