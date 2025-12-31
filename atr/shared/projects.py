@@ -193,8 +193,7 @@ class VotePolicyForm(form.Form):
     )
     start_vote_template: str = form.label(
         "Start vote template",
-        "Email template for messages to start a vote on a release.",
-        widget=form.Widget.TEXTAREA,
+        widget=form.Widget.CUSTOM,
     )
 
     @pydantic.model_validator(mode="after")
@@ -224,8 +223,7 @@ class FinishPolicyForm(form.Form):
     )
     announce_release_template: str = form.label(
         "Announce release template",
-        "Email template for messages to announce a finished release.",
-        widget=form.Widget.TEXTAREA,
+        widget=form.Widget.CUSTOM,
     )
     preserve_download_files: form.Bool = form.label(
         "Preserve download files",

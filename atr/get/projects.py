@@ -322,6 +322,14 @@ def _render_finish_form(project: sql.Project) -> htm.Element:
         htm.h3(".mb-0")["Release policy - Finish options"]
     ]
 
+    announce_release_template_widget = _textarea_with_variables(
+        field_name="announce_release_template",
+        default_value=project.policy_announce_release_template or "",
+        template_variables=construct.announce_template_variables(),
+        rows=10,
+        documentation="Email template for messages to announce a finished release.",
+    )
+
     with card.block(htm.div, classes=".card-body") as card_body:
         form.render_block(
             card_body,
@@ -338,6 +346,7 @@ def _render_finish_form(project: sql.Project) -> htm.Element:
             border=True,
             # wider_widgets=True,
             textarea_rows=10,
+            custom={"announce_release_template": announce_release_template_widget},
         )
     return card.collect()
 
@@ -543,6 +552,14 @@ def _render_vote_form(project: sql.Project) -> htm.Element:
         documentation="Markdown text describing how to test release candidates.",
     )
 
+    start_vote_template_widget = _textarea_with_variables(
+        field_name="start_vote_template",
+        default_value=project.policy_start_vote_template or "",
+        template_variables=construct.vote_template_variables(),
+        rows=10,
+        documentation="Email template for messages to start a vote on a release.",
+    )
+
     with card.block(htm.div, classes=".card-body") as card_body:
         form.render_block(
             card_body,
@@ -555,7 +572,10 @@ def _render_vote_form(project: sql.Project) -> htm.Element:
             # wider_widgets=True,
             textarea_rows=10,
             skip=skip_fields,
-            custom={"release_checklist": release_checklist_widget},
+            custom={
+                "release_checklist": release_checklist_widget,
+                "start_vote_template": start_vote_template_widget,
+            },
         )
     return card.collect()
 
