@@ -36,13 +36,6 @@ _BLUEPRINT = quart.Blueprint(_BLUEPRINT_NAME, __name__)
 _routes: list[str] = []
 
 
-def register(app: base.QuartApp) -> tuple[ModuleType, list[str]]:
-    import atr.post as post
-
-    app.register_blueprint(_BLUEPRINT)
-    return post, _routes
-
-
 def committer(path: str) -> Callable[[web.CommitterRouteFunction[Any]], web.RouteFunction[Any]]:
     def decorator(func: web.CommitterRouteFunction[Any]) -> web.RouteFunction[Any]:
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -197,3 +190,10 @@ def public(path: str) -> Callable[[Callable[..., Awaitable[Any]]], web.RouteFunc
         return wrapper
 
     return decorator
+
+
+def register(app: base.QuartApp) -> tuple[ModuleType, list[str]]:
+    import atr.post as post
+
+    app.register_blueprint(_BLUEPRINT)
+    return post, _routes

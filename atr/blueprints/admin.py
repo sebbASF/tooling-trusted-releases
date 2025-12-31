@@ -33,18 +33,6 @@ _BLUEPRINT_NAME = "admin_blueprint"
 _BLUEPRINT = quart.Blueprint(_BLUEPRINT_NAME, __name__, url_prefix="/admin", template_folder="../admin/templates")
 
 
-@_BLUEPRINT.before_request
-async def _check_admin_access() -> None:
-    web_session = await asfquart.session.read()
-    if web_session is None:
-        raise base.ASFQuartException("Not authenticated", errorcode=401)
-
-    if web_session.uid not in user.get_admin_users():
-        raise base.ASFQuartException("You are not authorized to access the admin interface", errorcode=403)
-
-    quart.g.session = web.Committer(web_session)
-
-
 def empty() -> Callable[[Callable[..., Awaitable[Any]]], Callable[..., Awaitable[Any]]]:
     def decorator(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
         async def wrapper(session: web.Committer, *args: Any, **kwargs: Any) -> Any:
@@ -144,3 +132,15 @@ def register(app: base.QuartApp) -> tuple[ModuleType, list[str]]:
 
     app.register_blueprint(_BLUEPRINT)
     return admin, []
+
+
+@_BLUEPRINT.before_request
+async def _check_admin_access() -> None:
+    web_session = await asfquart.session.read()
+    if web_session is None:
+        raise base.ASFQuartException("Not authenticated", errorcode=401)
+
+    if web_session.uid not in user.get_admin_users():
+        raise base.ASFQuartException("You are not authorized to access the admin interface", errorcode=403)
+
+    quart.g.session = web.Committer(web_session)

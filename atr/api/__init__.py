@@ -1269,21 +1269,6 @@ async def vote_tabulate(data: models.api.VoteTabulateArgs) -> DictResponse:
     ).model_dump(), 200
 
 
-def _committee_member_or_admin(committee: sql.Committee, asf_uid: str) -> None:
-    if not (user.is_committee_member(committee, asf_uid) or user.is_admin(asf_uid)):
-        raise exceptions.Forbidden("You do not have permission to perform this action")
-
-
-# @db.session_function
-# async def _get_pat(data: db.Session, uid: str, token_hash: str) -> sql.PersonalAccessToken | None:
-#     return await data.query_one_or_none(
-#         sqlmodel.select(sql.PersonalAccessToken).where(
-#             sql.PersonalAccessToken.asfuid == uid,
-#             sql.PersonalAccessToken.token_hash == token_hash,
-#         )
-#     )
-
-
 def _jwt_asf_uid() -> str:
     claims = getattr(quart.g, "jwt_claims", {})
     asf_uid = claims.get("sub")
