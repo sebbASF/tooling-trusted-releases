@@ -48,17 +48,6 @@ document
 		}
 	});
 
-// Add click handlers for project cards
-document.querySelectorAll(".page-project-card").forEach((card) => {
-	card.addEventListener("click", function (event) {
-		// Prevent card navigation if click is inside a form
-		if (event.target.closest("form")) {
-			return;
-		}
-		window.location.href = this.dataset.projectUrl;
-	});
-});
-
 // Participant filter logic
 const participantButton = document.getElementById("filter-participant-button");
 participantButton.addEventListener("click", function () {
