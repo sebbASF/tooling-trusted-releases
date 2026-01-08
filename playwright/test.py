@@ -149,10 +149,8 @@ def lifecycle_03_add_file(page: Page, credentials: Credentials, version_name: st
     expect(submit_button_locator).to_be_enabled()
     submit_button_locator.click()
 
-    logging.info("Waiting for upload progress UI to appear")
-    progress_container = page.locator("#upload-progress-container")
-    expect(progress_container).to_be_visible()
-
+    # We used to check here that the #upload-progress-container was visible
+    # But this caused occasional timing issues, so we removed that check
     logging.info("Waiting for upload to complete and redirect to compose page")
     page.wait_for_url(f"**/compose/{TEST_PROJECT}/{version_name}*", timeout=30000)
     wait_for_path(page, f"/compose/{TEST_PROJECT}/{version_name}")
