@@ -207,6 +207,30 @@ class ProjectGetResults(schema.Strict):
     project: sql.Project
 
 
+class ProjectPolicyResults(schema.Strict):
+    endpoint: Literal["/project/policy"] = schema.alias("endpoint")
+    project_name: str
+    policy_announce_release_subject: str
+    policy_announce_release_template: str
+    policy_binary_artifact_paths: list[str]
+    policy_github_compose_workflow_path: list[str]
+    policy_github_finish_workflow_path: list[str]
+    policy_github_repository_name: str
+    policy_github_vote_workflow_path: list[str]
+    policy_license_check_mode: sql.LicenseCheckMode
+    policy_mailto_addresses: list[str]
+    policy_manual_vote: bool
+    policy_min_hours: int
+    policy_pause_for_rm: bool
+    policy_preserve_download_files: bool
+    policy_release_checklist: str
+    policy_source_artifact_paths: list[str]
+    policy_start_vote_subject: str
+    policy_start_vote_template: str
+    policy_strict_checking: bool
+    policy_vote_comment_template: str
+
+
 class ProjectReleasesResults(schema.Strict):
     endpoint: Literal["/project/releases"] = schema.alias("endpoint")
     releases: Sequence[sql.Release]

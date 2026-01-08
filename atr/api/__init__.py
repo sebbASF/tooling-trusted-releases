@@ -552,6 +552,43 @@ async def project_get(name: str) -> DictResponse:
     ).model_dump(), 200
 
 
+@api.route("/project/policy/<name>")
+@quart_schema.validate_response(models.api.ProjectPolicyResults, 200)
+async def project_policy(name: str) -> DictResponse:
+    """
+    Get project policy by name.
+
+    Returns the release policy settings for a project.
+    If no policy has been configured, defaults are returned.
+    """
+    _simple_check(name)
+    async with db.session() as data:
+        project = await data.project(name=name, _release_policy=True, _committee=True).demand(exceptions.NotFound())
+    return models.api.ProjectPolicyResults(
+        endpoint="/project/policy",
+        project_name=project.name,
+        policy_announce_release_subject=project.policy_announce_release_subject,
+        policy_announce_release_template=project.policy_announce_release_template,
+        policy_binary_artifact_paths=project.policy_binary_artifact_paths,
+        policy_github_compose_workflow_path=project.policy_github_compose_workflow_path,
+        policy_github_finish_workflow_path=project.policy_github_finish_workflow_path,
+        policy_github_repository_name=project.policy_github_repository_name,
+        policy_github_vote_workflow_path=project.policy_github_vote_workflow_path,
+        policy_license_check_mode=project.policy_license_check_mode,
+        policy_mailto_addresses=project.policy_mailto_addresses,
+        policy_manual_vote=project.policy_manual_vote,
+        policy_min_hours=project.policy_min_hours,
+        policy_pause_for_rm=project.policy_pause_for_rm,
+        policy_preserve_download_files=project.policy_preserve_download_files,
+        policy_release_checklist=project.policy_release_checklist,
+        policy_source_artifact_paths=project.policy_source_artifact_paths,
+        policy_start_vote_subject=project.policy_start_vote_subject,
+        policy_start_vote_template=project.policy_start_vote_template,
+        policy_strict_checking=project.policy_strict_checking,
+        policy_vote_comment_template=project.policy_vote_comment_template,
+    ).model_dump(), 200
+
+
 @api.route("/project/releases/<name>")
 @quart_schema.validate_response(models.api.ProjectReleasesResults, 200)
 async def project_releases(name: str) -> DictResponse:
