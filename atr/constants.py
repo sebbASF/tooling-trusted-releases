@@ -221,3 +221,13 @@ APACHE_LICENSE_2_0: Final[str] = """\
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+
+GENERATED_FILE_SUFFIXES: Final[tuple[str, ...]] = (
+    ".bundle.js",
+    ".chunk.js",
+    ".css.map",
+    ".js.map",
+    ".min.css",
+    ".min.js",
+    ".min.map",
+)

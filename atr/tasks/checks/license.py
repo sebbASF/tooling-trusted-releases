@@ -526,7 +526,10 @@ def _headers_check_core_logic_process_file(
 
 
 def _headers_check_core_logic_should_check(filepath: str) -> bool:
-    """Determine if a file should be checked for license headers."""
+    """Determine whether a file should be checked for license headers."""
+    if filepath.endswith(constants.GENERATED_FILE_SUFFIXES):
+        return False
+
     ext = _get_file_extension(filepath)
     if ext is None:
         return False

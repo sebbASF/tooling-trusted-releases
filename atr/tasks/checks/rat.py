@@ -25,6 +25,7 @@ from typing import Any, Final
 
 import atr.archives as archives
 import atr.config as config
+import atr.constants as constants
 import atr.log as log
 import atr.models.results as results
 import atr.models.sql as sql
@@ -44,15 +45,7 @@ _JAVA_MEMORY_ARGS: Final[list[str]] = []
 # ]
 
 # Generated file patterns, always excluded
-_GENERATED_FILE_PATTERNS: Final[list[str]] = [
-    "**/*.bundle.js",
-    "**/*.chunk.js",
-    "**/*.css.map",
-    "**/*.js.map",
-    "**/*.min.css",
-    "**/*.min.js",
-    "**/*.min.map",
-]
+_GENERATED_FILE_PATTERNS: Final[list[str]] = [f"**/*{s}" for s in constants.GENERATED_FILE_SUFFIXES]
 
 # The name of the file that contains the exclusions for the specified archive
 _RAT_EXCLUDES_FILENAME: Final[str] = ".rat-excludes"
