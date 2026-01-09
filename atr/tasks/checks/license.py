@@ -308,7 +308,7 @@ def _files_check_core_logic_notice(archive: tarzip.Archive, member: tarzip.Membe
     if not re.search(r"Copyright\s+(?:\d{4}|\d{4}-\d{4})\s+The Apache Software Foundation", content, re.MULTILINE):
         issues.append("missing or invalid copyright statement")
     if not re.search(
-        r"This product includes software developed at\s*\nThe Apache Software Foundation \(.*?\)", content, re.DOTALL
+        r"This product includes software developed at\s*\nThe Apache Software Foundation", content, re.DOTALL
     ):
         issues.append("missing or invalid foundation attribution")
 
