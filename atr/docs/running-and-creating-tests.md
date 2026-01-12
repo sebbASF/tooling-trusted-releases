@@ -8,10 +8,11 @@
 
 **Sections**:
 
-* [Running tests](#running-tests)
-* [Creating tests](#creating-tests)
+* [Running Playwright tests](#running-playwright-tests)
+* [Creating Playwright tests](#creating-playwright-tests)
+* [Running end-to-end tests](#running-end-to-end-tests)
 
-## Running tests
+## Running Playwright tests
 
 We currently only have end-to-end browser tests, but we plan to expand these as part of [Issue #209](https://github.com/apache/tooling-trusted-releases/issues/209). Meanwhile, these browser tests serve as a simple consistency check when developing ATR.
 
@@ -48,7 +49,7 @@ In other words, we build [`tests/Dockerfile.playwright`](/ref/tests/Dockerfile.p
 
 The tests should, as of 14 Oct 2025, take about 40 to 50 seconds to run in Docker Compose, and 20 to 25 seconds to run on the host. The last line of the test output should be `Tests finished successfully`, and if the tests do not complete successfully there should be an obvious Python backtrace.
 
-## Creating tests
+## Creating Playwright tests
 
 You can add tests to `playwright/test.py`. If you're feeling particularly adventurous, you can add separate unit tests etc., but it's okay to add tests only to the Playwright test script until [Issue #209](https://github.com/apache/tooling-trusted-releases/issues/209) is resolved.
 
@@ -63,3 +64,7 @@ The `test.py` script calls [`run_tests`](/ref/playwright/test.py:run_tests) from
 We want to make it more clear which Playwright tests depend on which, and have more isolated tests. Reusing context, however, helps to speed up the tests.
 
 The actual test cases themselves tend to use helpers such as [`go_to_path`](/ref/playwright/test.py:go_to_path) and [`wait_for_path`](/ref/playwright/test.py:wait_for_path), and then call [`logging.info`](https://docs.python.org/3/library/logging.html#logging.info) to print information to the console. Try to keep logging messages terse and informative.
+
+## Running end-to-end tests
+
+To run ATR end-to-end (e2e) tests, you must first have an OCI container runtime with Compose functionality, such as Docker or Podman, installed. You will also need a POSIX shell. You can then run `tests/run-e2e.sh` to run the entire e2e test suite.
