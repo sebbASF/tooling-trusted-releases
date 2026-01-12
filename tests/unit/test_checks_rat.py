@@ -44,10 +44,10 @@ def _skip_if_unavailable(rat_available: tuple[bool, bool]) -> None:
 def test_check_includes_excludes_source_none(rat_available: tuple[bool, bool]):
     _skip_if_unavailable(rat_available)
     result = rat._check_core_logic(str(TEST_ARCHIVE), [])
-    assert result["excludes_source"] == "none"
+    assert result.excludes_source == "none"
 
 
 def test_check_includes_excludes_source_policy(rat_available: tuple[bool, bool]):
     _skip_if_unavailable(rat_available)
     result = rat._check_core_logic(str(TEST_ARCHIVE), ["*.py"])
-    assert result["excludes_source"] == "policy"
+    assert result.excludes_source == "policy"
