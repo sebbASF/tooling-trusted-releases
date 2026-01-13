@@ -313,6 +313,18 @@ def _is_inside_directory(path: str, directory: str) -> bool:
     return path.startswith(directory + os.sep)
 
 
+def _sanitise_command_for_storage(command: list[str]) -> list[str]:
+    """Replace absolute paths with filenames for known arguments."""
+    path_args = {"-jar", "--output-file"}
+    result: list[str] = []
+    for i, arg in enumerate(command):
+        if (i > 0) and (command[i - 1] in path_args) and os.path.isabs(arg):
+            result.append(os.path.basename(arg))
+        else:
+            result.append(arg)
+    return result
+
+
 def _summary_message(valid: bool, unapproved_licenses: int, unknown_licenses: int) -> str:
     message = "All files have approved licenses"
     if not valid:
@@ -524,7 +536,7 @@ def _synchronous_extract(
 
     result.excludes_source = excludes_source
     result.extended_std_applied = apply_extended_std
-    result.command = command
+    result.command = _sanitise_command_for_storage(command)
     return result
 
 

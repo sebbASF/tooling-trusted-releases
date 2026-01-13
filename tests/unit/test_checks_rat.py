@@ -55,6 +55,24 @@ def test_check_includes_excludes_source_policy(rat_available: tuple[bool, bool])
     assert result.excludes_source == "policy"
 
 
+def test_sanitise_command_replaces_absolute_paths():
+    command = [
+        "java",
+        "-jar",
+        "/opt/tools/apache-rat-0.17.jar",
+        "--output-file",
+        "/fake/path/rat_verify_abc123/rat-report.xml",
+        "--input-exclude",
+        ".rat-excludes",
+        "--",
+        ".",
+    ]
+    result = rat._sanitise_command_for_storage(command)
+    assert result[2] == "apache-rat-0.17.jar"
+    assert result[4] == "rat-report.xml"
+    assert result[6] == ".rat-excludes"
+
+
 def _skip_if_unavailable(rat_available: tuple[bool, bool]) -> None:
     java_ok, jar_ok = rat_available
     if not java_ok:
