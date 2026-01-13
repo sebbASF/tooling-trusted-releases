@@ -110,7 +110,7 @@ serve:
 	  atr.server:app --debug --reload --worker-class uvloop
 
 serve-local:
-	APP_HOST=localhost.apache.org:8080 SECRET_KEY=insecure-local-key \
+	APP_HOST=localhost.apache.org:8080 SECRET_KEY=insecure-local-key DISABLE_CHECK_CACHE=1 \
 	  ALLOW_TESTS=1 SSH_HOST=127.0.0.1 uv run --frozen hypercorn --bind $(BIND) \
 	  --keyfile localhost.apache.org+2-key.pem --certfile localhost.apache.org+2.pem \
 	  atr.server:app --debug --reload --worker-class uvloop
