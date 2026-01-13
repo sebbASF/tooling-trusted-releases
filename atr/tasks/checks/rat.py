@@ -55,7 +55,7 @@ _POLICY_EXCLUDES_FILENAME: Final[str] = ".atr-rat-excludes"
 _RAT_EXCLUDES_FILENAME: Final[str] = ".rat-excludes"
 
 # The name of the RAT report file
-_RAT_REPORT_FILENAME: Final[str] = "rat-report.xml"
+_RAT_REPORT_FILENAME: Final[str] = ".atr-rat-report.xml"
 
 # Standard exclusions, always applied explicitly
 _STD_EXCLUSIONS_ALWAYS: Final[list[str]] = ["MISC", "HIDDEN_DIR", "MAC"]
@@ -140,11 +140,12 @@ def _build_rat_command(
     for pattern in _GENERATED_FILE_PATTERNS:
         command.extend(["--input-exclude", pattern])
 
+    # Exclude the output just in case
+    # TODO: Check whether this file exists in the archive
     command.extend(["--input-exclude", _RAT_REPORT_FILENAME])
-    command.extend(["--input-exclude", _POLICY_EXCLUDES_FILENAME])
 
     if excludes_file is not None:
-        command.extend(["--input-exclude", _RAT_EXCLUDES_FILENAME])
+        command.extend(["--input-exclude", excludes_file])
         command.extend(["--input-exclude-file", excludes_file])
 
     command.extend(["--", "."])

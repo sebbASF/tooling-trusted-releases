@@ -21,7 +21,14 @@ import pytest
 
 import atr.tasks.checks.rat as rat
 
+# Archive WITHOUT .rat-excludes
+# (It still uses the old, now removed, rat-excludes.txt convention)
 TEST_ARCHIVE = pathlib.Path(__file__).parent.parent / "e2e" / "test_files" / "apache-test-0.2.tar.gz"
+
+# Archive WITH .rat-excludes
+TEST_ARCHIVE_WITH_RAT_EXCLUDES = (
+    pathlib.Path(__file__).parent.parent.parent / "playwright" / "apache-test-0.2" / "apache-test-0.2.tar.gz"
+)
 
 
 @pytest.fixture
@@ -53,6 +60,51 @@ def test_check_includes_excludes_source_policy(rat_available: tuple[bool, bool])
     _skip_if_unavailable(rat_available)
     result = rat._synchronous(str(TEST_ARCHIVE), ["*.py"])
     assert result.excludes_source == "policy"
+
+
+def test_excludes_archive_ignores_policy_when_file_exists(rat_available: tuple[bool, bool]):
+    """When archive has .rat-excludes, ignore policy patterns even if provided."""
+    _skip_if_unavailable(rat_available)
+    result = rat._synchronous(str(TEST_ARCHIVE_WITH_RAT_EXCLUDES), ["*.py", "*.txt"])
+    assert result.excludes_source == "archive"
+    # Should NOT use .atr-rat-excludes
+    assert ".atr-rat-excludes" not in result.command
+
+
+def test_excludes_archive_uses_rat_excludes_file(rat_available: tuple[bool, bool]):
+    """When archive has .rat-excludes, use it and set source to archive."""
+    _skip_if_unavailable(rat_available)
+    result = rat._synchronous(str(TEST_ARCHIVE_WITH_RAT_EXCLUDES), [])
+    assert result.excludes_source == "archive"
+    assert "--input-exclude-file" in result.command
+    # Should use .rat-excludes, not .atr-rat-excludes
+    idx = result.command.index("--input-exclude-file")
+    assert result.command[idx + 1] == ".rat-excludes"
+
+
+def test_excludes_none_has_no_exclude_file(rat_available: tuple[bool, bool]):
+    """When neither archive nor policy, no exclude file should be used."""
+    _skip_if_unavailable(rat_available)
+    result = rat._synchronous(str(TEST_ARCHIVE), [])
+    assert result.excludes_source == "none"
+    assert "--input-exclude-file" not in result.command
+    # Should have neither excludes file in command
+    assert ".rat-excludes" not in result.command
+    assert ".atr-rat-excludes" not in result.command
+
+
+def test_excludes_policy_uses_atr_rat_excludes(rat_available: tuple[bool, bool]):
+    """When no archive .rat-excludes but policy exists, use policy file."""
+    _skip_if_unavailable(rat_available)
+    # The second argument to rat._synchronous is a list of exclusions from policy
+    result = rat._synchronous(str(TEST_ARCHIVE), ["*.py"])
+    assert result.excludes_source == "policy"
+    assert "--input-exclude-file" in result.command
+    # Should use .atr-rat-excludes, not .rat-excludes
+    idx = result.command.index("--input-exclude-file")
+    assert result.command[idx + 1] == ".atr-rat-excludes"
+    # Should therefore NOT have .rat-excludes in the command
+    assert ".rat-excludes" not in result.command
 
 
 def test_sanitise_command_replaces_absolute_paths():
