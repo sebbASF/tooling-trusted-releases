@@ -2,7 +2,7 @@
 
 **Up**: `3.` [Developer guide](developer-guide)
 
-**Prev**: `2.1.` [Signing artifacts](signing-artifacts)
+**Prev**: `2.2.` [Signing artifacts](signing-artifacts)
 
 **Next**: `3.2.` [Overview of the code](overview-of-the-code)
 
