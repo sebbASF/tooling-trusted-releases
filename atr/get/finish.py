@@ -548,19 +548,18 @@ def _render_release_card(release: sql.Release) -> htm.Element:
 def _render_task(task: sql.Task) -> htm.Element:
     """Render a distribution task's details."""
     args: gha.DistributionWorkflow = gha.DistributionWorkflow.model_validate(task.task_args)
+    task_date = task.added.strftime("%Y-%m-%d %H:%M:%S")
     task_status = task.status.value
-    workflow_message = task.workflow.message if task.workflow else None
     workflow_status = task.workflow.status if task.workflow else ""
+    workflow_message = task.workflow.message if task.workflow else workflow_status.capitalize()
     if task_status != sql.TaskStatus.COMPLETED:
         return htm.p[
-            f"{args.platform} ({args.package} {args.version}): {task.error if task.error else task_status.capitalize()}"
-        ]
-    else:
-        return htm.p[
-            f"{args.platform} ({args.package} {args.version}): {
-                workflow_message if workflow_message else workflow_status.capitalize()
+            f"{task_date} {args.platform} ({args.package} {args.version}): {
+                task.error if task.error else task_status.capitalize()
             }"
         ]
+    else:
+        return htm.p[f"{task_date} {args.platform} ({args.package} {args.version}): {workflow_message}"]
 
 
 async def _sources_and_targets(latest_revision_dir: pathlib.Path) -> tuple[list[pathlib.Path], set[pathlib.Path]]:
