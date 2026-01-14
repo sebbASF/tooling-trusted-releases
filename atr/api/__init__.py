@@ -344,7 +344,7 @@ async def distribution_record(data: models.api.DistributionRecordArgs) -> DictRe
 
 
 @api.route("/distribute/record_from_workflow", methods=["POST"])
-@quart_schema.validate_request(models.api.DistributeStatusUpdateArgs)
+@quart_schema.validate_request(models.api.DistributionRecordFromWorkflowArgs)
 async def distribution_record_from_workflow(data: models.api.DistributionRecordFromWorkflowArgs) -> DictResponse:
     """
     Record a distribution.
