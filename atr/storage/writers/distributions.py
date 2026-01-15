@@ -197,12 +197,22 @@ class CommitteeMember(CommitteeParticipant):
         dd: distribution.Data,
     ) -> tuple[sql.Distribution, bool, distribution.Metadata]:
         template_url = await self.__template_url(dd, staging)
-        api_url = template_url.format(
-            owner_namespace=dd.owner_namespace,
-            package=dd.package,
-            version=dd.version,
-        )
-        api_oc = await self.__json_from_distribution_platform(api_url, dd.platform, dd.version)
+
+        if dd.platform == sql.DistributionPlatform.MAVEN and staging:
+            owner = (dd.owner_namespace or "").replace(".", "/")
+            api_url = template_url.format(
+                owner_namespace=owner,
+                package=dd.package,
+                version=dd.version,
+            )
+            api_oc = await self.__json_from_maven_xml(api_url, dd.version)
+        else:
+            api_url = template_url.format(
+                owner_namespace=dd.owner_namespace,
+                package=dd.package,
+                version=dd.version,
+            )
+            api_oc = await self.__json_from_distribution_platform(api_url, dd.platform, dd.version)
         match api_oc:
             case outcome.Result(result):
                 pass
@@ -337,6 +347,68 @@ class CommitteeMember(CommitteeParticipant):
                     return outcome.Error(e)
         return outcome.Result(result)
 
+    async def __json_from_maven_xml(self, api_url: str, version: str) -> outcome.Outcome[basic.JSON]:
+        import datetime
+        import xml.etree.ElementTree as ET
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(api_url) as response:
+                    response.raise_for_status()
+                    xml_text = await response.text()
+
+            # Parse the XML
+            root = ET.fromstring(xml_text)
+
+            # Extract versioning info
+            group = root.find("groupId")
+            artifact = root.find("artifactId")
+            versioning = root.find("versioning")
+            if versioning is None:
+                e = RuntimeError("No versioning element found in Maven metadata")
+                return outcome.Error(e)
+
+            # Get lastUpdated timestamp (format: yyyyMMddHHmmss)
+            last_updated_elem = versioning.find("lastUpdated")
+            if last_updated_elem is None or not last_updated_elem.text:
+                e = RuntimeError("No lastUpdated timestamp found in Maven metadata")
+                return outcome.Error(e)
+
+            # Convert lastUpdated string to Unix timestamp in milliseconds
+            last_updated_str = last_updated_elem.text
+            dt = datetime.datetime.strptime(last_updated_str, "%Y%m%d%H%M%S")
+            dt = dt.replace(tzinfo=datetime.UTC)
+            timestamp_ms = int(dt.timestamp() * 1000)
+
+            # Verify the version exists
+            versions_elem = versioning.find("versions")
+            if versions_elem is not None:
+                versions = [v.text for v in versions_elem.findall("version") if v.text]
+                if version not in versions:
+                    e = RuntimeError(f"Version '{version}' not found in Maven metadata")
+                    return outcome.Error(e)
+
+            # Convert to dict matching MavenResponse structure
+            result_dict = {
+                "response": {
+                    "start": 0,
+                    "docs": [
+                        {
+                            "g": group.text if group is not None else "",
+                            "a": artifact.text if artifact is not None else "",
+                            "v": version,
+                            "timestamp": timestamp_ms,
+                        }
+                    ],
+                }
+            }
+            result = basic.as_json(result_dict)
+            return outcome.Result(result)
+        except aiohttp.ClientError as e:
+            return outcome.Error(e)
+        except ET.ParseError as e:
+            return outcome.Error(RuntimeError(f"Failed to parse Maven XML: {e}"))
+
     async def __template_url(
         self,
         dd: distribution.Data,
@@ -345,9 +417,13 @@ class CommitteeMember(CommitteeParticipant):
         if staging is False:
             return dd.platform.value.template_url
 
-        supported = {sql.DistributionPlatform.ARTIFACT_HUB, sql.DistributionPlatform.PYPI}
+        supported = {
+            sql.DistributionPlatform.ARTIFACT_HUB,
+            sql.DistributionPlatform.PYPI,
+            sql.DistributionPlatform.MAVEN,
+        }
         if dd.platform not in supported:
-            raise storage.AccessError("Staging is currently supported only for ArtifactHub and PyPI.")
+            raise storage.AccessError("Staging is currently supported only for ArtifactHub, PyPI and Maven Central.")
 
         template_url = dd.platform.value.template_staging_url
         if template_url is None:

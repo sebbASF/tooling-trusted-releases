@@ -123,6 +123,7 @@ class DistributionPlatform(enum.Enum):
         gh_slug="maven",
         template_url="https://search.maven.org/solrsearch/select?q=g:{owner_namespace}+AND+a:{package}+AND+v:{version}&core=gav&rows=20&wt=json",
         # Java ASF projects use staging URLs along the lines of
+        template_staging_url="https://repository.apache.org:4443/repository/maven-staging/{owner_namespace}/{package}/maven-metadata.xml",
         # https://repository.apache.org/content/repositories/orgapachePROJECT-NNNN/
         # There's no JSON, but each individual package has maven-metadata.xml
         requires_owner_namespace=True,
