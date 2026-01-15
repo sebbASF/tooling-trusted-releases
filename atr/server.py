@@ -20,7 +20,9 @@
 import asyncio
 import contextlib
 import datetime
+import fcntl
 import os
+import pathlib
 import queue
 import urllib.parse
 from collections.abc import Iterable
@@ -110,6 +112,7 @@ def _app_dirs_setup(app_config: type[config.AppConfig]) -> None:
     print(f"Working directory changed to: {os.getcwd()}")
 
     directories_to_ensure = [
+        pathlib.Path(app_config.STATE_DIR) / "audit",
         util.get_downloads_dir(),
         util.get_finished_dir(),
         util.get_tmp_dir(),
@@ -294,6 +297,7 @@ def _app_setup_logging(app: base.QuartApp, config_mode: config.Mode, app_config:
 
     # Configure dedicated audit logger
     try:
+        pathlib.Path(app_config.STORAGE_AUDIT_LOG_FILE).parent.mkdir(parents=True, exist_ok=True)
         audit_handler = logging.FileHandler(
             app_config.STORAGE_AUDIT_LOG_FILE,
             encoding="utf-8",
@@ -391,6 +395,7 @@ def _create_app(app_config: type[config.AppConfig]) -> base.QuartApp:
     if os.sep != "/":
         raise RuntimeError('ATR requires a POSIX compatible filesystem where os.sep is "/"')
     config_mode = config.get_mode()
+    _migrate_state_directory(app_config)
     _app_dirs_setup(app_config)
     log.performance_init()
     app = _app_create_base(app_config)
@@ -477,6 +482,48 @@ async def _metadata_update_scheduler() -> None:
 
         # Schedule next update in 24 hours
         await asyncio.sleep(86400)
+
+
+def _migrate_audit(state_dir: pathlib.Path) -> None:
+    _migrate_file(
+        state_dir / "storage-audit.log",
+        state_dir / "audit" / "storage-audit.log",
+    )
+
+
+def _migrate_directory(old_path: pathlib.Path, new_path: pathlib.Path) -> None:
+    if old_path.exists() and (not new_path.exists()):
+        old_path.rename(new_path)
+        print(f"Migrated directory: {old_path} -> {new_path}")
+    elif old_path.exists() and new_path.exists():
+        raise RuntimeError(f"Migration conflict: both {old_path} and {new_path} exist")
+    else:
+        print(f"No directory migration needed: {old_path}")
+
+
+def _migrate_file(old_path: pathlib.Path, new_path: pathlib.Path) -> None:
+    if old_path.exists() and (not new_path.exists()):
+        new_path.parent.mkdir(parents=True, exist_ok=True)
+        old_path.rename(new_path)
+        print(f"Migrated file: {old_path} -> {new_path}")
+    elif old_path.exists() and new_path.exists():
+        raise RuntimeError(f"Migration conflict: both {old_path} and {new_path} exist")
+    else:
+        print(f"No file migration needed: {old_path}")
+
+
+def _migrate_state_directory(app_config: type[config.AppConfig]) -> None:
+    state_dir = pathlib.Path(app_config.STATE_DIR)
+    runtime_dir = state_dir / "runtime"
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = runtime_dir / "migration.lock"
+
+    with open(lock_path, "w") as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
+        try:
+            _migrate_audit(state_dir)
+        finally:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
 
 
 def _register_routes(app: base.QuartApp) -> None:
