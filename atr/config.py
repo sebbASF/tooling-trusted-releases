@@ -65,7 +65,6 @@ class AppConfig:
     USE_BLOCKBUSTER = False
     JWT_SECRET_KEY = _config_secrets("JWT_SECRET_KEY", STATE_DIR, default=None, cast=str) or secrets.token_hex(128 // 8)
     SECRET_KEY = _config_secrets("SECRET_KEY", STATE_DIR, default=None, cast=str) or secrets.token_hex(128 // 8)
-    WTF_CSRF_ENABLED = decouple.config("WTF_CSRF_ENABLED", default=True, cast=bool)
     DOWNLOADS_STORAGE_DIR = os.path.join(STATE_DIR, "downloads")
     FINISHED_STORAGE_DIR = os.path.join(STATE_DIR, "finished")
     UNFINISHED_STORAGE_DIR = os.path.join(STATE_DIR, "unfinished")
