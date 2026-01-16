@@ -50,7 +50,7 @@ def issue(uid: str, *, ttl: int = 90 * 60) -> str:
         "sub": uid,
         "iat": now,
         "exp": now + datetime.timedelta(seconds=ttl),
-        "jti": secrets.token_hex(8),
+        "jti": secrets.token_hex(128 // 8),
     }
     return jwt.encode(payload, _JWT_SECRET_KEY, algorithm=_ALGORITHM)
 
