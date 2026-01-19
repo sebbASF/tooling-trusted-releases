@@ -197,8 +197,13 @@ class CommitteeMember(CommitteeParticipant):
         dd: distribution.Data,
     ) -> tuple[sql.Distribution, bool, distribution.Metadata]:
         template_url = await self.__template_url(dd, staging)
-
-        if dd.platform == sql.DistributionPlatform.MAVEN and staging:
+        api_url = template_url.format(
+            owner_namespace=dd.owner_namespace,
+            package=dd.package,
+            version=dd.version,
+        )
+        if dd.platform == sql.DistributionPlatform.MAVEN:
+            # We do this here because the CDNs break the namespace up into a / delimited URL
             owner = (dd.owner_namespace or "").replace(".", "/")
             api_url = template_url.format(
                 owner_namespace=owner,
@@ -207,11 +212,6 @@ class CommitteeMember(CommitteeParticipant):
             )
             api_oc = await self.__json_from_maven_xml(api_url, dd.version)
         else:
-            api_url = template_url.format(
-                owner_namespace=dd.owner_namespace,
-                package=dd.package,
-                version=dd.version,
-            )
             api_oc = await self.__json_from_distribution_platform(api_url, dd.platform, dd.version)
         match api_oc:
             case outcome.Result(result):
@@ -346,6 +346,38 @@ class CommitteeMember(CommitteeParticipant):
                     e = RuntimeError(f"Version '{version}' not found")
                     return outcome.Error(e)
         return outcome.Result(result)
+
+    async def __json_from_maven_cdn(
+        self, api_url: str, group_id: str, artifact_id: str, version: str
+    ) -> outcome.Outcome[basic.JSON]:
+        import datetime
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(api_url) as response:
+                    response.raise_for_status()
+
+            # Use current time as timestamp since we're just validating the package exists
+            timestamp_ms = int(datetime.datetime.now(datetime.UTC).timestamp() * 1000)
+
+            # Convert to dict matching MavenResponse structure
+            result_dict = {
+                "response": {
+                    "start": 0,
+                    "docs": [
+                        {
+                            "g": group_id,
+                            "a": artifact_id,
+                            "v": version,
+                            "timestamp": timestamp_ms,
+                        }
+                    ],
+                }
+            }
+            result = basic.as_json(result_dict)
+            return outcome.Result(result)
+        except aiohttp.ClientError as e:
+            return outcome.Error(e)
 
     async def __json_from_maven_xml(self, api_url: str, version: str) -> outcome.Outcome[basic.JSON]:
         import datetime
