@@ -80,6 +80,8 @@ _MIGRATIONS: Final[list[tuple[str, str]]] = [
     ("route-performance.log", "logs/route-performance.log"),
     # Secrets
     ("secrets.ini", "secrets/curated/secrets.ini"),
+    ("apptoken.txt", "secrets/generated/apptoken.txt"),
+    ("ssh_host_key", "secrets/generated/ssh_host_key"),
 ]
 
 _SWAGGER_UI_TEMPLATE: Final[str] = """<!DOCTYPE html>
@@ -113,7 +115,7 @@ def _app_create_base(app_config: type[config.AppConfig]) -> base.QuartApp:
     """Create the base Quart application."""
     if asfquart.construct is ...:
         raise ValueError("asfquart.construct is not set")
-    app = asfquart.construct(__name__)
+    app = asfquart.construct(__name__, token_file="secrets/generated/apptoken.txt")
     # ASFQuart sets secret_key from apptoken.txt, or generates a new one
     # We must preserve this because from_object will overwrite it
     # Our AppConfig.SECRET_KEY is None since we no longer support that setting
@@ -141,6 +143,7 @@ def _app_dirs_setup(state_dir_str: str, hot_reload: bool) -> None:
         pathlib.Path(state_dir_str) / "logs",
         pathlib.Path(state_dir_str) / "runtime",
         pathlib.Path(state_dir_str) / "secrets" / "curated",
+        pathlib.Path(state_dir_str) / "secrets" / "generated",
         util.get_downloads_dir(),
         util.get_finished_dir(),
         util.get_tmp_dir(),

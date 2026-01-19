@@ -147,7 +147,7 @@ async def server_start() -> asyncssh.SSHAcceptor:
     # await aiofiles.os.makedirs(_CONFIG.STATE_DIR, exist_ok=True)
 
     # Generate temporary host key if it doesn't exist
-    key_path = os.path.join(_CONFIG.STATE_DIR, "ssh_host_key")
+    key_path = os.path.join(_CONFIG.STATE_DIR, "secrets", "generated", "ssh_host_key")
     if not await aiofiles.os.path.exists(key_path):
         private_key = asyncssh.generate_private_key("ssh-rsa")
         private_key.write_private_key(key_path)
