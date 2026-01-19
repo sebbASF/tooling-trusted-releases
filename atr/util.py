@@ -487,7 +487,7 @@ async def get_release_stats(release: sql.Release) -> tuple[int, int, str]:
 
 def get_tmp_dir() -> pathlib.Path:
     # This must be on the same filesystem as the other state subdirectories
-    return pathlib.Path(config.get().STATE_DIR) / "tmp"
+    return pathlib.Path(config.get().STATE_DIR) / "temporary"
 
 
 def get_unfinished_dir() -> pathlib.Path:

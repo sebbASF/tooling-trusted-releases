@@ -84,6 +84,8 @@ _MIGRATIONS: Final[list[tuple[str, str]]] = [
     ("ssh_host_key", "secrets/generated/ssh_host_key"),
     # Subversion
     ("svn", "subversion"),
+    # Temporary
+    ("tmp", "temporary"),
 ]
 
 _SWAGGER_UI_TEMPLATE: Final[str] = """<!DOCTYPE html>

@@ -151,7 +151,7 @@ Only a small number of subdirectories of the state directory are written to by t
 * `downloads`, configured by `DOWNLOADS_STORAGE_DIR`
 * `finished`, configured by `FINISHED_STORAGE_DIR`
 * `subversion`, configured by `SVN_STORAGE_DIR`
-* `tmp`, which is unconfigurable
+* `temporary`, which is unconfigurable
 * `unfinished`, configured by `UNFINISHED_STORAGE_DIR`
 
 And the purposes of these directories is as follows. Note that "immutable" here means that existing files cannot be modified, but does not preclude new files from being added.
@@ -160,14 +160,14 @@ And the purposes of these directories is as follows. Note that "immutable" here 
 * `downloads` [**mutable**] are hard links to released artifacts in the `finished` directory. The `finished` directory contains the files exactly as they were arranged by the release managers upon announcing the release, separated strictly into one directory per release. The `downloads` folder, on the other hand, has no restrictions on its organisation and can be rearranged.
 * `finished` [**immutable**, except for moving to external archive] contains, as mentioned above, all of the files of a release as they were when announced. This therefore constitutes an historical record and allows us to rewrite the hard links in the `downloads` directory without having to consider not accidentally deleting files by removing all references, etc.
 * `subversion` [**mutable**] is designed to mirror two subdirectories, `dev` and `release`, of `https://dist.apache.org/repos/dist`. This is currently unused.
-* `tmp` [**mutable**] holds temporary files during operations where the data cannot be modified in place. One important example is when creating a staging directory of a new revision. A subdirectory with a random name is made in this directory, and then the files in the prior version are hard linked into it. The modifications take place in this staging area before the directory is finalised and moved to `unfinished`.
+* `temporary` [**mutable**] holds temporary files during operations where the data cannot be modified in place. One important example is when creating a staging directory of a new revision. A subdirectory with a random name is made in this directory, and then the files in the prior version are hard linked into it. The modifications take place in this staging area before the directory is finalised and moved to `unfinished`.
 * `unfinished` [**immutable**, except for moving to `finished`] contains all of the files in a release before it is announced. In other words, when the release managers compose a release, when the committee votes on the release, and when the release has been voted on but not yet announced, the files for that release are in this directory.
 
 This list does not include any configuration files, logs, or log directories.
 
 ## How should the filesystem be backed up?
 
-Only the `attestable`, `downloads`, `finished`, and `unfinished` directories need to be backed up. The `subversion` directory is unused, and the `tmp` directory is for temporary staging.
+Only the `attestable`, `downloads`, `finished`, and `unfinished` directories need to be backed up. The `subversion` directory is unused, and the `temporary` directory is for temporary staging.
 
 The structure of the directories that need backing up is as follows. An ellipsis, `...`, means any number of further files or subdirectories containing subdirectories or files recursively.
 
