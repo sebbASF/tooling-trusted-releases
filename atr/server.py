@@ -78,6 +78,8 @@ _MIGRATIONS: Final[list[tuple[str, str]]] = [
     ("atr-worker-error.log", "logs/atr-worker-error.log"),
     ("keys_import.log", "logs/keys-import.log"),
     ("route-performance.log", "logs/route-performance.log"),
+    # Secrets
+    ("secrets.ini", "secrets/curated/secrets.ini"),
 ]
 
 _SWAGGER_UI_TEMPLATE: Final[str] = """<!DOCTYPE html>
@@ -144,6 +146,7 @@ def _app_dirs_setup(state_dir_str: str, hot_reload: bool) -> None:
         pathlib.Path(state_dir_str) / "external",
         pathlib.Path(state_dir_str) / "logs",
         pathlib.Path(state_dir_str) / "runtime",
+        pathlib.Path(state_dir_str) / "secrets" / "curated",
         util.get_downloads_dir(),
         util.get_finished_dir(),
         util.get_tmp_dir(),

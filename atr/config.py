@@ -28,26 +28,43 @@ _RAT_VERSION: Final = "0.17"
 
 
 def _config_secrets(key: str, state_dir: str, default: str | None = None, cast: type = str) -> str | None:
-    secrets_path = os.path.join(state_dir, "secrets.ini")
+    secrets_path = os.path.join(state_dir, "secrets", "curated", "secrets.ini")
+
+    # This code is deprecated and will be removed
+    # TODO: Remove this once migrations are no longer likely2026-
+    deprecated_path = os.path.join(state_dir, "secrets.ini")
+    if os.path.exists(deprecated_path):
+        if os.path.exists(secrets_path):
+            raise RuntimeError(f"Conflicting secrets files exist: {deprecated_path} and {secrets_path}")
+        return _config_secrets_get(deprecated_path, key, default, cast, allow_not_found=False)
+
+    return _config_secrets_get(secrets_path, key, default, cast)
+
+
+def _config_secrets_get(
+    secrets_path: str, key: str, default: str | None = None, cast: type = str, allow_not_found: bool = True
+) -> str | None:
     try:
         repo_ini = decouple.RepositoryIni(secrets_path)
-        config_obj = decouple.Config(repo_ini)
-        sentinel = object()
-        # Using a cast here would also cast the default sentinel value
-        value = config_obj.get(key, default=sentinel)
-        if value is sentinel:
-            if default is None:
-                # We must return None separately because otherwise it may be cast
-                return decouple.config(key, default=None)
-            return decouple.config(key, default=default, cast=cast)
-        if isinstance(value, str) or (value is None):
-            return value
-        return None
     except FileNotFoundError:
-        if default is None:
-            # We must return None separately because otherwise it may be cast
-            return decouple.config(key, default=None)
-        return decouple.config(key, default=default, cast=cast)
+        if allow_not_found is False:
+            raise
+    else:
+        if key in repo_ini:
+            value = repo_ini[key]
+            return cast(value)
+
+    # There is no secrets file, or it does not contain the key
+    # Try getting the value from environment variables
+    sentinel = object()
+    # We do not use the cast keyword argument here
+    # If we did, it would also be applied to the default sentinel value
+    value = decouple.config(key, default=sentinel)
+    if value is sentinel:
+        return default
+    if not isinstance(value, str):
+        raise ValueError(f"Secret value for {key} is not a string")
+    return cast(value)
 
 
 class AppConfig:
