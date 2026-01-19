@@ -82,6 +82,8 @@ _MIGRATIONS: Final[list[tuple[str, str]]] = [
     ("secrets.ini", "secrets/curated/secrets.ini"),
     ("apptoken.txt", "secrets/generated/apptoken.txt"),
     ("ssh_host_key", "secrets/generated/ssh_host_key"),
+    # Subversion
+    ("svn", "subversion"),
 ]
 
 _SWAGGER_UI_TEMPLATE: Final[str] = """<!DOCTYPE html>

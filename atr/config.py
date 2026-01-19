@@ -99,7 +99,7 @@ class AppConfig:
     UNFINISHED_STORAGE_DIR = os.path.join(STATE_DIR, "unfinished")
     # TODO: By convention this is at /x1/, but we can symlink it here perhaps?
     # TODO: We need to get Puppet to check SVN out initially, or do it manually
-    SVN_STORAGE_DIR = os.path.join(STATE_DIR, "svn")
+    SVN_STORAGE_DIR = os.path.join(STATE_DIR, "subversion")
     ATTESTABLE_STORAGE_DIR = os.path.join(STATE_DIR, "attestable")
     SQLITE_DB_PATH = decouple.config("SQLITE_DB_PATH", default="database/atr.db")
     STORAGE_AUDIT_LOG_FILE = os.path.join(STATE_DIR, "audit", "storage-audit.log")
