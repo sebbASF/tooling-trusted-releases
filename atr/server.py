@@ -76,7 +76,6 @@ _MIGRATIONS: Final[list[tuple[str, str]]] = [
     # Logs
     ("atr-worker.log", "logs/atr-worker.log"),
     ("atr-worker-error.log", "logs/atr-worker-error.log"),
-    ("hypercorn.log", "logs/hypercorn.log"),
     ("keys_import.log", "logs/keys-import.log"),
     ("route-performance.log", "logs/route-performance.log"),
 ]
@@ -142,6 +141,7 @@ def _app_dirs_setup(state_dir_str: str, hot_reload: bool) -> None:
         pathlib.Path(state_dir_str) / "audit",
         pathlib.Path(state_dir_str) / "cache",
         pathlib.Path(state_dir_str) / "database",
+        pathlib.Path(state_dir_str) / "external",
         pathlib.Path(state_dir_str) / "logs",
         pathlib.Path(state_dir_str) / "runtime",
         util.get_downloads_dir(),
