@@ -127,7 +127,7 @@ To stop the container, remove the volume, rebuild, and run the tests:
 ```shell
 cd tests && docker compose down -v
 docker compose build --no-cache atr-dev
-sh tests/run-e2e.sh
+cd .. && sh tests/run-e2e.sh
 ```
 
 **Remove all test containers and images:**
