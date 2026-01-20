@@ -66,7 +66,7 @@ curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR="/usr/local/bin"
 uv python install 3.13
 ```
 
-For macOS these instructions become:
+For Homebrew on macOS these instructions become:
 
 ```shell
 brew install cmark mkcert
@@ -87,6 +87,8 @@ make serve-local
 ```
 
 The `certs-local` step runs `mkcert localhost.apache.org 127.0.0.1 ::1` to generate a locally trusted TLS certificate. To avoid potential DNS resolution issues such as [those alluded to in RFC 8252](https://datatracker.ietf.org/doc/html/rfc8252#section-8.3), we do not include `localhost`. If the certificate is not trusted, you may have to follow the [mkcert guide](https://github.com/FiloSottile/mkcert/blob/master/README.md) to resolve the issue.
+
+**Note**: Using ```mkcert --install``` carries a risk, as by default it installs a new CA for the system, Java, and Firefox. The CA is valid for 10 years, and it is not possible to change the expiry date when creating the CA cert. If the private key ```rootCA-key.pem``` (which is created in the directory shown by ```mkcert -CAROOT``) should ever be leaked, anyone could create SSL certificates that are trusted by your system. See [mkcert usaage caveat](https://github.com/FiloSottile/mkcert/tree/master?tab=readme-ov-file#installation) and [final caveat](https://github.com/FiloSottile/mkcert/tree/master?tab=readme-ov-file#installing-the-ca-on-other-systems).
 
 ATR requires TLS even for development because login is performed through the actual ASF OAuth server. This way, the development behavior aligns closely with the production behavior. We try to minimize differences between development and production environments.
 
