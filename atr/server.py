@@ -229,7 +229,7 @@ def _app_setup_context(app: base.QuartApp) -> None:
         }
 
 
-def _app_setup_lifecycle(app: base.QuartApp) -> None:
+def _app_setup_lifecycle(app: base.QuartApp, app_config: type[config.AppConfig]) -> None:
     """Setup application lifecycle hooks."""
 
     @app.before_serving
@@ -247,19 +247,18 @@ def _app_setup_lifecycle(app: base.QuartApp) -> None:
         scheduler_task = asyncio.create_task(_register_recurrent_tasks())
         app.extensions["scheduler_task"] = scheduler_task
 
-        await _initialise_test_environment()
+        await _initialise_test_environment(app_config)
 
-        conf = config.get()
-        pubsub_url = conf.PUBSUB_URL
-        pubsub_user = conf.PUBSUB_USER
-        pubsub_password = conf.PUBSUB_PASSWORD
+        pubsub_url = app_config.PUBSUB_URL
+        pubsub_user = app_config.PUBSUB_USER
+        pubsub_password = app_config.PUBSUB_PASSWORD
         parsed_pubsub_url = urllib.parse.urlparse(pubsub_url) if pubsub_url else None
         valid_pubsub_url = bool(parsed_pubsub_url and parsed_pubsub_url.scheme and parsed_pubsub_url.netloc)
 
         if valid_pubsub_url and pubsub_url and pubsub_user and pubsub_password:
             log.info("Starting PubSub SVN listener")
             listener = pubsub.SVNListener(
-                working_copy_root=conf.SVN_STORAGE_DIR,
+                working_copy_root=app_config.SVN_STORAGE_DIR,
                 url=pubsub_url,
                 username=pubsub_user,
                 password=pubsub_password,
@@ -451,7 +450,7 @@ def _create_app(app_config: type[config.AppConfig]) -> base.QuartApp:
     filters.register_filters(app)
     _app_setup_context(app)
     _app_setup_security_headers(app)
-    _app_setup_lifecycle(app)
+    _app_setup_lifecycle(app, app_config)
 
     # _register_recurrent_tasks()
 
@@ -480,8 +479,8 @@ def _create_app(app_config: type[config.AppConfig]) -> base.QuartApp:
     return app
 
 
-async def _initialise_test_environment() -> None:
-    if not config.get().ALLOW_TESTS:
+async def _initialise_test_environment(conf: type[config.AppConfig]) -> None:
+    if not conf.ALLOW_TESTS:
         return
 
     async with db.session() as data:

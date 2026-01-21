@@ -148,7 +148,7 @@ class Committer:
                 ldap_scope="BASE",
             )
             if not (result and (len(result) == 1)):
-                raise CommitterError(f"Authentication failed")
+                raise CommitterError("Authentication failed")
         except CommitterError:
             raise
         except Exception as ex:

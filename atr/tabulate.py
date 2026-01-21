@@ -26,6 +26,7 @@ import atr.util as util
 
 MAX_THREAD_MESSAGES = 10000
 
+
 async def vote_committee(thread_id: str, release: sql.Release) -> sql.Committee | None:
     committee = release.project.committee
     if util.is_dev_environment():
@@ -140,7 +141,7 @@ def vote_summary(tabulated_votes: dict[str, models.tabulate.VoteEmail]) -> dict[
     return result
 
 
-async def votes(
+async def votes(  # noqa: C901
     committee: sql.Committee | None, thread_id: str
 ) -> tuple[int | None, dict[str, models.tabulate.VoteEmail]]:
     """Tabulate votes."""
