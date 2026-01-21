@@ -123,7 +123,7 @@ Alternatively, use [`https://127.0.0.1:8080/`](https://127.0.0.1:8080/) without 
 1. **Set up pre-commit hooks:**
 
    ```shell
-   uv run pre-commit install
+   uv run pre-commit --frozen install
    ```
 
 2. **Run code checks:**

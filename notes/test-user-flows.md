@@ -4,7 +4,7 @@ To test the ATR, here are some example command line and GitHub user flows.
 
 ## Command line
 
-To install the `atr` command, use the [instructions in the client `README.md`](https://github.com/apache/tooling-releases-client/tree/main?tab=readme-ov-file#quick-start), or simply use `uv run atr` instead of `atr`.
+To install the `atr` command, use the [instructions in the client `README.md`](https://github.com/apache/tooling-releases-client/tree/main?tab=readme-ov-file#quick-start), or simply use `uv run --frozen atr` instead of `atr`.
 
 [Create a PAT](https://release-test.apache.org/tokens) using the UI, then store the value in `atr` configuration.
 

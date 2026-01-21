@@ -37,7 +37,7 @@ For detailed ASF policies, commit message guidelines, and security consideration
 3. **Set up pre-commit hooks:**
 
    ```shell
-   uv run pre-commit install
+   uv run pre-commit --frozen install
    ```
 
 4. **Run the server:** See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed instructions.
