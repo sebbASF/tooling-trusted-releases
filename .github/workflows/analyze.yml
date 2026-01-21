@@ -1,6 +1,8 @@
 name: Analyze using pre-commit hooks
 
 on:
+  push:
+    branches: [main, sbp]
   pull_request:
     branches: [main]
   workflow_dispatch:
