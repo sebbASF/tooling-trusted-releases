@@ -741,14 +741,24 @@ async def _register_recurrent_tasks() -> None:
         log.exception(f"Failed to schedule recurrent tasks: {e!s}")
 
 
-def _register_routes(app: base.QuartApp) -> None:
+def _register_routes(app: base.QuartApp) -> None:  # noqa: C901
     # Add a global error handler to show helpful error messages with tracebacks
     @app.errorhandler(Exception)
     async def handle_any_exception(error: Exception) -> Any:
+        import traceback
+
         if quart.request.path.startswith("/api"):
             status_code = getattr(error, "code", 500) if isinstance(error, Exception) else 500
             return quart.jsonify({"error": str(error)}), status_code
+
         log.exception("Unhandled exception")
+        if util.is_dev_environment():
+            return await template.render(
+                "error.html",
+                error=str(error),
+                traceback=traceback.format_exc(),
+                status_code=500,
+            ), 500
         return await template.render("error.html", error=str(error), status_code=500), 500
 
     @app.errorhandler(base.ASFQuartException)
