@@ -10,6 +10,7 @@
 
 * [Quick start](#quick-start)
 * [Commit message style](#commit-message-style)
+* [Contributing documentation](#contributing-documentation)
 * [ASF contribution policies](#asf-contribution-policies)
 * [Special considerations for ATR](#special-considerations-for-atr)
 * [Getting help](#getting-help)
@@ -57,6 +58,14 @@ refactoring vote resolution logic
 ```
 
 Most commits do not need a body. For complex changes, add a body separated by a blank line explaining _what_ and _why_ (not how). We typically use asterisk-itemized lists.
+
+## Contributing documentation
+
+ATR documentation lives in `atr/docs/` as Markdown files. When adding or modifying documentation, it is important to understand how the documentation is built.
+
+The file [`atr/docs/index.md`](/ref/atr/docs/index.md) contains a table of contents that acts as the source of truth for the documentation build system. The [`scripts/docs_build.py`](/ref/scripts/docs_build.py) script reads this file to discover all documentation pages, generate navigation links, and validate that everything is consistent.
+
+When you add a new documentation file, you must also add an entry to the table of contents in `index.md`. The build will fail if any `.md` files exist in `atr/docs/` that are not listed in the table of contents, or if the table of contents references files that do not exist.
 
 ## ASF contribution policies
 
